@@ -1,6 +1,15 @@
 import Phaser from 'phaser';
 import * as THREE from 'three';
 import * as RAPIER from '@dimforge/rapier3d';
+import { createPlayer, movePlayer, updatePlayerVisual, isPlayerOffPlatform } from './player.js';
+import {
+  createPlatform,
+  createBlock,
+  createGoal,
+  updateBlockVisual,
+  isBlockAtGoal,
+  isBlockOffPlatform,
+} from './physicsBlocks.js';
 
 // --- Three.js Scene Setup ---
 const scene = new THREE.Scene();
@@ -16,14 +25,6 @@ document.body.appendChild(renderer.domElement);
 // --- Rapier Physics World Setup ---
 let world = null;
 let physicsObjects = {
-  platform: null,
-  block: null,
-  player: null,
-  goal: null,
-};
-
-// --- Three.js Meshes ---
-let threeMeshes = {
   platform: null,
   block: null,
   player: null,
@@ -63,84 +64,23 @@ async function initPhysics() {
   // Create physics world with gravity
   world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
 
-  // --- Platform (Ground) - Static body ---
-  const platformGeometry = new THREE.BoxGeometry(10, 0.5, 10);
-  const platformMaterial = new THREE.MeshBasicMaterial({ color: 0x444444 });
-  threeMeshes.platform = new THREE.Mesh(platformGeometry, platformMaterial);
-  threeMeshes.platform.position.y = -1;
-  scene.add(threeMeshes.platform);
+  // Create platform
+  const platform = createPlatform(world, scene);
+  physicsObjects.platform = platform;
 
-  const platformTop = threeMeshes.platform.position.y + platformGeometry.parameters.height / 2;
+  // Create movable block
+  const block = createBlock(world, scene, platform.top);
+  physicsObjects.block = block;
+  physicsObjects.blockBody = block.body;
 
-  // Create static platform physics body
-  const platformColliderDesc = RAPIER.ColliderDesc.cuboid(5, 0.25, 5);
-  const platformBodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(
-    threeMeshes.platform.position.x,
-    threeMeshes.platform.position.y,
-    threeMeshes.platform.position.z
-  );
-  const platformBody = world.createRigidBody(platformBodyDesc);
-  physicsObjects.platform = world.createCollider(platformColliderDesc, platformBody);
+  // Create goal area
+  const goal = createGoal(world, scene, platform.top);
+  physicsObjects.goal = goal;
 
-  // --- Movable Block - Dynamic body ---
-  const blockGeometry = new THREE.BoxGeometry(1, 1, 1);
-  const blockMaterial = new THREE.MeshBasicMaterial({ color: 0x00aaff });
-  threeMeshes.block = new THREE.Mesh(blockGeometry, blockMaterial);
-  threeMeshes.block.position.y = platformTop + 0.5;
-  scene.add(threeMeshes.block);
-
-  const blockBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-    .setLinearDamping(0.2) // Reduced from 0.5 - block maintains momentum better
-    .setAngularDamping(0.3) // Reduced from 0.5 - less rotational resistance
-    .setTranslation(
-      threeMeshes.block.position.x,
-      threeMeshes.block.position.y,
-      threeMeshes.block.position.z
-    );
-  const blockBody = world.createRigidBody(blockBodyDesc);
-  const blockColliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.5, 0.5)
-    .setFriction(0.3) // Reduced friction - block slides easier (default is typically 0.5)
-    .setDensity(0.5); // Reduced density - makes block lighter and easier to push (default is typically 1.0)
-  physicsObjects.block = world.createCollider(blockColliderDesc, blockBody);
-
-  // --- Goal Area - Sensor (no physics, just detection) ---
-  const goalGeometry = new THREE.BoxGeometry(1, 0.1, 1);
-  const goalMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff55 });
-  threeMeshes.goal = new THREE.Mesh(goalGeometry, goalMaterial);
-  threeMeshes.goal.position.set(3, platformTop + 0.05, -2);
-  scene.add(threeMeshes.goal);
-
-  const goalBodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(
-    threeMeshes.goal.position.x,
-    threeMeshes.goal.position.y,
-    threeMeshes.goal.position.z
-  );
-  const goalBody = world.createRigidBody(goalBodyDesc);
-  const goalColliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.05, 0.5).setSensor(true);
-  physicsObjects.goal = world.createCollider(goalColliderDesc, goalBody);
-
-  // --- Player Box - Dynamic body ---
-  const playerGeometry = new THREE.BoxGeometry(0.6, 0.6, 0.6);
-  const playerMaterial = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
-  threeMeshes.player = new THREE.Mesh(playerGeometry, playerMaterial);
-  threeMeshes.player.position.set(0, platformTop + 0.3, 2);
-  scene.add(threeMeshes.player);
-
-  const playerBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-    .setLinearDamping(0.3) // Reduced damping to maintain momentum better
-    .setAngularDamping(0.8)
-    .setTranslation(
-      threeMeshes.player.position.x,
-      threeMeshes.player.position.y,
-      threeMeshes.player.position.z
-    );
-  const playerBody = world.createRigidBody(playerBodyDesc);
-  const playerColliderDesc = RAPIER.ColliderDesc.cuboid(0.3, 0.3, 0.3).setFriction(playerFriction);
-  physicsObjects.player = world.createCollider(playerColliderDesc, playerBody);
-
-  // Store body references for later use
-  physicsObjects.playerBody = playerBody;
-  physicsObjects.blockBody = blockBody;
+  // Create player
+  const player = createPlayer(world, scene, platform.top, playerFriction);
+  physicsObjects.player = player;
+  physicsObjects.playerBody = player.body;
 
   // --- Camera ---
   camera.position.set(6, 10, 6);
@@ -190,7 +130,7 @@ async function create() {
   // Handle mouse input through Phaser
   this.input.on('pointerdown', pointer => {
     if (gameOver) return;
-    if (!physicsObjects.playerBody) return;
+    if (!physicsObjects.playerBody || !physicsObjects.platform) return;
 
     // Convert Phaser pointer coordinates to Three.js normalized device coordinates
     const mouse = new THREE.Vector2();
@@ -200,31 +140,18 @@ async function create() {
     // Raycast to find click position on platform
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObject(threeMeshes.platform);
+    const intersects = raycaster.intersectObject(physicsObjects.platform.mesh);
 
     if (intersects.length > 0) {
       const clickPoint = intersects[0].point.clone();
       // Keep click point at platform height
-      clickPoint.y = threeMeshes.platform.position.y + 0.25 + 0.3;
+      clickPoint.y = physicsObjects.platform.mesh.position.y + 0.25 + 0.3;
 
-      // Calculate direction from player to click point
-      const playerPos = physicsObjects.playerBody.translation();
-      const dir = new THREE.Vector3(
-        clickPoint.x - playerPos.x,
-        0, // Only horizontal movement
-        clickPoint.z - playerPos.z
-      );
-
-      const distance = dir.length();
-
-      if (distance > 0.1) {
-        dir.normalize();
-        // Scale force based on distance, capped at max force
-        const scaledForce = Math.min(distance * playerMoveForce, playerMaxForce);
-        // Apply impulse once on mouse down - impulse needs to be strong enough for momentum
-        const impulse = new RAPIER.Vector3(dir.x * scaledForce, 0, dir.z * scaledForce);
-        physicsObjects.playerBody.applyImpulse(impulse, true);
-      }
+      // Move player using the player module
+      movePlayer(physicsObjects.playerBody, clickPoint, physicsObjects.platform.mesh, {
+        moveForce: playerMoveForce,
+        maxForce: playerMaxForce,
+      });
     }
   });
 
@@ -253,59 +180,31 @@ function update(_time, _delta) {
   world.step();
 
   // Sync physics bodies with Three.js meshes
-  if (physicsObjects.playerBody && threeMeshes.player) {
-    const playerPos = physicsObjects.playerBody.translation();
-    threeMeshes.player.position.set(playerPos.x, playerPos.y, playerPos.z);
-    const playerRot = physicsObjects.playerBody.rotation();
-    threeMeshes.player.quaternion.set(playerRot.x, playerRot.y, playerRot.z, playerRot.w);
+  if (physicsObjects.player) {
+    updatePlayerVisual(physicsObjects.player.body, physicsObjects.player.mesh);
   }
 
-  if (physicsObjects.blockBody && threeMeshes.block) {
-    const blockPos = physicsObjects.blockBody.translation();
-    threeMeshes.block.position.set(blockPos.x, blockPos.y, blockPos.z);
-    const blockRot = physicsObjects.blockBody.rotation();
-    threeMeshes.block.quaternion.set(blockRot.x, blockRot.y, blockRot.z, blockRot.w);
+  if (physicsObjects.block) {
+    updateBlockVisual(physicsObjects.block.body, physicsObjects.block.mesh);
   }
 
   // Check win condition (block touches goal)
-  if (physicsObjects.blockBody && !gameOver) {
-    const blockPos = physicsObjects.blockBody.translation();
-    const goalPos = threeMeshes.goal.position;
-    const goalDist = Math.sqrt(
-      Math.pow(blockPos.x - goalPos.x, 2) +
-        Math.pow(blockPos.y - goalPos.y, 2) +
-        Math.pow(blockPos.z - goalPos.z, 2)
-    );
-
-    if (goalDist < 0.8) {
+  if (physicsObjects.block && physicsObjects.goal && !gameOver) {
+    if (isBlockAtGoal(physicsObjects.block.body, physicsObjects.goal.mesh)) {
       showMessage('You Win!');
     }
   }
 
   // Check loss condition (block reaches platform edge)
-  if (physicsObjects.blockBody && !gameOver) {
-    const blockPos = physicsObjects.blockBody.translation();
-    const halfSize = 5;
-    if (
-      blockPos.x < -halfSize ||
-      blockPos.x > halfSize ||
-      blockPos.z < -halfSize ||
-      blockPos.z > halfSize
-    ) {
+  if (physicsObjects.block && physicsObjects.platform && !gameOver) {
+    if (isBlockOffPlatform(physicsObjects.block.body, physicsObjects.platform.halfSize)) {
       showMessage('You Lose!');
     }
   }
 
   // Check loss condition (player falls off platform)
-  if (physicsObjects.playerBody && !gameOver) {
-    const playerPos = physicsObjects.playerBody.translation();
-    const halfSize = 5;
-    if (
-      playerPos.x < -halfSize ||
-      playerPos.x > halfSize ||
-      playerPos.z < -halfSize ||
-      playerPos.z > halfSize
-    ) {
+  if (physicsObjects.player && physicsObjects.platform && !gameOver) {
+    if (isPlayerOffPlatform(physicsObjects.player.body, physicsObjects.platform.halfSize)) {
       showMessage('You Lose!');
     }
   }
