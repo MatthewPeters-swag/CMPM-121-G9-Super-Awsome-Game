@@ -296,6 +296,20 @@ function update(_time, _delta) {
     }
   }
 
+  // Check loss condition (player falls off platform)
+  if (physicsObjects.playerBody && !gameOver) {
+    const playerPos = physicsObjects.playerBody.translation();
+    const halfSize = 5;
+    if (
+      playerPos.x < -halfSize ||
+      playerPos.x > halfSize ||
+      playerPos.z < -halfSize ||
+      playerPos.z > halfSize
+    ) {
+      showMessage('You Lose!');
+    }
+  }
+
   // Render Three.js scene
   renderer.render(scene, camera);
 }
