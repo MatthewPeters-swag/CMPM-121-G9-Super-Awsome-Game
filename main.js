@@ -1,15 +1,10 @@
 import Phaser from 'phaser';
 import * as THREE from 'three';
 import * as RAPIER from '@dimforge/rapier3d';
-import { createPlayer, movePlayer, updatePlayerVisual, isPlayerOffPlatform } from './player.js';
-import {
-  createPlatform,
-  createBlock,
-  createGoal,
-  updateBlockVisual,
-  isBlockAtGoal,
-  isBlockOffPlatform,
-} from './physicsBlocks.js';
+import { Player } from './player.js';
+import { Platform } from './platform.js';
+import { Block } from './block.js';
+import { Goal } from './goal.js';
 
 // --- Three.js Scene Setup ---
 const scene = new THREE.Scene();
@@ -65,22 +60,16 @@ async function initPhysics() {
   world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
 
   // Create platform
-  const platform = createPlatform(world, scene);
-  physicsObjects.platform = platform;
+  physicsObjects.platform = new Platform(world, scene);
 
   // Create movable block
-  const block = createBlock(world, scene, platform.top);
-  physicsObjects.block = block;
-  physicsObjects.blockBody = block.body;
+  physicsObjects.block = new Block(world, scene, physicsObjects.platform.top);
 
   // Create goal area
-  const goal = createGoal(world, scene, platform.top);
-  physicsObjects.goal = goal;
+  physicsObjects.goal = new Goal(world, scene, physicsObjects.platform.top);
 
   // Create player
-  const player = createPlayer(world, scene, platform.top, playerFriction);
-  physicsObjects.player = player;
-  physicsObjects.playerBody = player.body;
+  physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, playerFriction);
 
   // --- Camera ---
   camera.position.set(6, 10, 6);
@@ -130,7 +119,7 @@ async function create() {
   // Handle mouse input through Phaser
   this.input.on('pointerdown', pointer => {
     if (gameOver) return;
-    if (!physicsObjects.playerBody || !physicsObjects.platform) return;
+    if (!physicsObjects.player || !physicsObjects.platform) return;
 
     // Convert Phaser pointer coordinates to Three.js normalized device coordinates
     const mouse = new THREE.Vector2();
@@ -147,8 +136,8 @@ async function create() {
       // Keep click point at platform height
       clickPoint.y = physicsObjects.platform.mesh.position.y + 0.25 + 0.3;
 
-      // Move player using the player module
-      movePlayer(physicsObjects.playerBody, clickPoint, physicsObjects.platform.mesh, {
+      // Move player using the player's move method
+      physicsObjects.player.move(clickPoint, physicsObjects.platform.mesh, {
         moveForce: playerMoveForce,
         maxForce: playerMaxForce,
       });
@@ -181,30 +170,30 @@ function update(_time, _delta) {
 
   // Sync physics bodies with Three.js meshes
   if (physicsObjects.player) {
-    updatePlayerVisual(physicsObjects.player.body, physicsObjects.player.mesh);
+    physicsObjects.player.updateVisual();
   }
 
   if (physicsObjects.block) {
-    updateBlockVisual(physicsObjects.block.body, physicsObjects.block.mesh);
+    physicsObjects.block.updateVisual();
   }
 
   // Check win condition (block touches goal)
   if (physicsObjects.block && physicsObjects.goal && !gameOver) {
-    if (isBlockAtGoal(physicsObjects.block.body, physicsObjects.goal.mesh)) {
+    if (physicsObjects.block.isAtGoal(physicsObjects.goal.mesh)) {
       showMessage('You Win!');
     }
   }
 
   // Check loss condition (block reaches platform edge)
   if (physicsObjects.block && physicsObjects.platform && !gameOver) {
-    if (isBlockOffPlatform(physicsObjects.block.body, physicsObjects.platform.halfSize)) {
+    if (physicsObjects.block.isOffPlatform(physicsObjects.platform.halfSize)) {
       showMessage('You Lose!');
     }
   }
 
   // Check loss condition (player falls off platform)
   if (physicsObjects.player && physicsObjects.platform && !gameOver) {
-    if (isPlayerOffPlatform(physicsObjects.player.body, physicsObjects.platform.halfSize)) {
+    if (physicsObjects.player.isOffPlatform(physicsObjects.platform.halfSize)) {
       showMessage('You Lose!');
     }
   }
