@@ -10,9 +10,18 @@ export class Player {
    * @param {RAPIER.World} world - The Rapier physics world
    * @param {THREE.Scene} scene - The Three.js scene
    * @param {number} platformTop - The Y position of the platform top surface
-   * @param {number} friction - The friction coefficient for the player
+   * @param {Object} config - Player configuration
+   * @param {number} config.friction - The friction coefficient for the player (default: 0.75)
+   * @param {number} config.minForce - Base force multiplier for movement (default: 1.0)
+   * @param {number} config.maxForce - Maximum force cap for far clicks (default: 3.0)
    */
-  constructor(world, scene, platformTop, friction = 0.75) {
+  constructor(world, scene, platformTop, config = {}) {
+    const { friction = 0.75, minForce = 1.0, maxForce = 3.0 } = config;
+
+    // Store movement configuration
+    this.minForce = minForce;
+    this.maxForce = maxForce;
+
     // Create player mesh
     const playerGeometry = new THREE.BoxGeometry(0.6, 0.6, 0.6);
     const playerMaterial = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
@@ -33,14 +42,8 @@ export class Player {
   /**
    * Handles player movement based on click input
    * @param {THREE.Vector3} clickPoint - The 3D point where the user clicked
-   * @param {THREE.Mesh} platformMesh - The platform mesh (for height reference)
-   * @param {Object} config - Movement configuration
-   * @param {number} config.moveForce - Base force multiplier
-   * @param {number} config.maxForce - Maximum force cap
    */
-  move(clickPoint, platformMesh, config = {}) {
-    const { moveForce = 1.0, maxForce = 3.0 } = config;
-
+  move(clickPoint) {
     // Calculate direction from player to click point
     const playerPos = this.body.translation();
     const dir = new THREE.Vector3(
@@ -54,7 +57,7 @@ export class Player {
     if (distance > 0.1) {
       dir.normalize();
       // Scale force based on distance, capped at max force
-      const scaledForce = Math.min(distance * moveForce, maxForce);
+      const scaledForce = Math.min(distance * this.minForce, this.maxForce);
       // Apply impulse once on mouse down - impulse needs to be strong enough for momentum
       const impulse = new RAPIER.Vector3(dir.x * scaledForce, 0, dir.z * scaledForce);
       this.body.applyImpulse(impulse, true);

@@ -28,9 +28,6 @@ let physicsObjects = {
 
 // --- Game State ---
 let gameOver = false;
-let playerMoveForce = 1.0; // Increased for single impulse application
-let playerMaxForce = 3.0; // Maximum force cap for far clicks
-let playerFriction = 0.75;
 
 // --- UI Message ---
 const message = document.createElement('div');
@@ -69,7 +66,11 @@ async function initPhysics() {
   physicsObjects.goal = new Goal(world, scene, physicsObjects.platform.top);
 
   // Create player
-  physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, playerFriction);
+  physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, {
+    friction: 0.75,
+    minForce: 1.0,
+    maxForce: 3.0,
+  });
 
   // --- Camera ---
   camera.position.set(6, 10, 6);
@@ -137,10 +138,7 @@ async function create() {
       clickPoint.y = physicsObjects.platform.mesh.position.y + 0.25 + 0.3;
 
       // Move player using the player's move method
-      physicsObjects.player.move(clickPoint, physicsObjects.platform.mesh, {
-        moveForce: playerMoveForce,
-        maxForce: playerMaxForce,
-      });
+      physicsObjects.player.move(clickPoint);
     }
   });
 
