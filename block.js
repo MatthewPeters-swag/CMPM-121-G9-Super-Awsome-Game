@@ -2,11 +2,11 @@ import * as THREE from 'three';
 import * as RAPIER from '@dimforge/rapier3d';
 
 /**
- * PhysicsBlock class that manages a movable physics block
+ * Block class that manages a movable physics block
  */
 export class Block {
   /**
-   * Creates a new PhysicsBlock instance
+   * Creates a new Block instance
    * @param {RAPIER.World} world - The Rapier physics world
    * @param {THREE.Scene} scene - The Three.js scene
    * @param {number} platformTop - The Y position of the platform top surface

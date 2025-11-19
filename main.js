@@ -5,6 +5,7 @@ import { Player } from './player.js';
 import { Platform } from './platform.js';
 import { Block } from './block.js';
 import { Goal } from './goal.js';
+import { handleResize, checkGameConditions } from './utils.js';
 
 // --- Three.js Scene Setup ---
 const scene = new THREE.Scene();
@@ -31,18 +32,20 @@ let gameOver = false;
 
 // --- UI Message ---
 const message = document.createElement('div');
-message.style.position = 'absolute';
-message.style.top = '20px';
-message.style.left = '50%';
-message.style.transform = 'translateX(-50%)';
-message.style.padding = '10px 20px';
-message.style.background = 'rgba(0,0,0,0.6)';
-message.style.color = 'white';
-message.style.fontFamily = 'sans-serif';
-message.style.fontSize = '20px';
-message.style.display = 'none';
-message.style.borderRadius = '6px';
-message.style.zIndex = '1000';
+Object.assign(message.style, {
+  position: 'absolute',
+  top: '20px',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  padding: '10px 20px',
+  background: 'rgba(0,0,0,0.6)',
+  color: 'white',
+  fontFamily: 'sans-serif',
+  fontSize: '20px',
+  display: 'none',
+  borderRadius: '6px',
+  zIndex: '1000',
+});
 document.body.appendChild(message);
 
 function showMessage(text) {
@@ -119,13 +122,13 @@ async function create() {
 
   // Handle mouse input through Phaser
   this.input.on('pointerdown', pointer => {
-    if (gameOver) return;
-    if (!physicsObjects.player || !physicsObjects.platform) return;
+    if (gameOver || !physicsObjects.player || !physicsObjects.platform) return;
 
     // Convert Phaser pointer coordinates to Three.js normalized device coordinates
-    const mouse = new THREE.Vector2();
-    mouse.x = (pointer.x / window.innerWidth) * 2 - 1;
-    mouse.y = -(pointer.y / window.innerHeight) * 2 + 1;
+    const mouse = new THREE.Vector2(
+      (pointer.x / window.innerWidth) * 2 - 1,
+      -(pointer.y / window.innerHeight) * 2 + 1
+    );
 
     // Raycast to find click position on platform
     const raycaster = new THREE.Raycaster();
@@ -136,29 +139,17 @@ async function create() {
       const clickPoint = intersects[0].point.clone();
       // Keep click point at platform height
       clickPoint.y = physicsObjects.platform.mesh.position.y + 0.25 + 0.3;
-
-      // Move player using the player's move method
       physicsObjects.player.move(clickPoint);
     }
   });
 
   // Handle window resize
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    game.scale.resize(window.innerWidth, window.innerHeight);
-  });
+  window.addEventListener('resize', () => handleResize(camera, renderer, game));
 }
 
 function update(_time, _delta) {
   // Always render, even if physics isn't ready yet
-  if (!world) {
-    renderer.render(scene, camera);
-    return;
-  }
-
-  if (gameOver) {
+  if (!world || gameOver) {
     renderer.render(scene, camera);
     return;
   }
@@ -167,34 +158,11 @@ function update(_time, _delta) {
   world.step();
 
   // Sync physics bodies with Three.js meshes
-  if (physicsObjects.player) {
-    physicsObjects.player.updateVisual();
-  }
+  const visualUpdateObjects = [physicsObjects.player, physicsObjects.block].filter(Boolean);
+  visualUpdateObjects.forEach(obj => obj.updateVisual());
 
-  if (physicsObjects.block) {
-    physicsObjects.block.updateVisual();
-  }
-
-  // Check win condition (block touches goal)
-  if (physicsObjects.block && physicsObjects.goal && !gameOver) {
-    if (physicsObjects.block.isAtGoal(physicsObjects.goal.mesh)) {
-      showMessage('You Win!');
-    }
-  }
-
-  // Check loss condition (block reaches platform edge)
-  if (physicsObjects.block && physicsObjects.platform && !gameOver) {
-    if (physicsObjects.block.isOffPlatform(physicsObjects.platform.halfSize)) {
-      showMessage('You Lose!');
-    }
-  }
-
-  // Check loss condition (player falls off platform)
-  if (physicsObjects.player && physicsObjects.platform && !gameOver) {
-    if (physicsObjects.player.isOffPlatform(physicsObjects.platform.halfSize)) {
-      showMessage('You Lose!');
-    }
-  }
+  // Check game conditions
+  checkGameConditions({ gameOver, physicsObjects, showMessage });
 
   // Render Three.js scene
   renderer.render(scene, camera);
