@@ -97,15 +97,17 @@ async function initPhysics() {
   scene.add(threeMeshes.block);
   
   const blockBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-    .setLinearDamping(0.5)
-    .setAngularDamping(0.5)
+    .setLinearDamping(0.2) // Reduced from 0.5 - block maintains momentum better
+    .setAngularDamping(0.3) // Reduced from 0.5 - less rotational resistance
     .setTranslation(
       threeMeshes.block.position.x,
       threeMeshes.block.position.y,
       threeMeshes.block.position.z
     );
   const blockBody = world.createRigidBody(blockBodyDesc);
-  const blockColliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.5, 0.5);
+  const blockColliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.5, 0.5)
+    .setFriction(0.3) // Reduced friction - block slides easier (default is typically 0.5)
+    .setDensity(0.5); // Reduced density - makes block lighter and easier to push (default is typically 1.0)
   physicsObjects.block = world.createCollider(blockColliderDesc, blockBody);
   
   // --- Goal Area - Sensor (no physics, just detection) ---
