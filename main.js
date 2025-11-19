@@ -38,6 +38,8 @@ let threeMeshes = {
 // --- Game State ---
 let gameOver = false;
 let targetPoint = null;
+let playerMoveForce = 0.08;
+let playerFriction = 1;
 
 // --- UI Message ---
 const message = document.createElement('div');
@@ -140,7 +142,8 @@ async function initPhysics() {
       threeMeshes.player.position.z
     );
   const playerBody = world.createRigidBody(playerBodyDesc);
-  const playerColliderDesc = RAPIER.ColliderDesc.cuboid(0.3, 0.3, 0.3);
+  const playerColliderDesc = RAPIER.ColliderDesc.cuboid(0.3, 0.3, 0.3)
+    .setFriction(playerFriction);
   physicsObjects.player = world.createCollider(playerColliderDesc, playerBody);
   
   // Store body references for later use
@@ -252,8 +255,8 @@ function update(time, delta) {
     
     if (dir.length() > 0.1) {
       dir.normalize();
-      // Apply impulse to move player
-      const impulse = new RAPIER.Vector3(dir.x * 2, 0, dir.z * 2);
+      // Apply impulse to move player (reduced force for smoother movement)
+      const impulse = new RAPIER.Vector3(dir.x * playerMoveForce, 0, dir.z * playerMoveForce);
       physicsObjects.playerBody.applyImpulse(impulse, true);
     } else {
       targetPoint = null;
