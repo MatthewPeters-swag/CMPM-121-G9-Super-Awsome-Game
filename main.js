@@ -37,10 +37,9 @@ let threeMeshes = {
 
 // --- Game State ---
 let gameOver = false;
-let targetPoint = null;
-let playerMoveForce = 0.08;
-let playerMaxForce = 0.25; // Maximum force cap for far clicks
-let playerFriction = 1;
+let playerMoveForce = 1.0; // Increased for single impulse application
+let playerMaxForce = 3.0; // Maximum force cap for far clicks
+let playerFriction = 0.75;
 
 // --- UI Message ---
 const message = document.createElement('div');
@@ -135,7 +134,7 @@ async function initPhysics() {
   scene.add(threeMeshes.player);
   
   const playerBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-    .setLinearDamping(0.8)
+    .setLinearDamping(0.3) // Reduced damping to maintain momentum better
     .setAngularDamping(0.8)
     .setTranslation(
       threeMeshes.player.position.x,
@@ -202,6 +201,7 @@ async function create() {
   // Handle mouse input through Phaser
   this.input.on('pointerdown', (pointer) => {
     if (gameOver) return;
+    if (!physicsObjects.playerBody) return;
     
     // Convert Phaser pointer coordinates to Three.js normalized device coordinates
     const mouse = new THREE.Vector2();
@@ -214,9 +214,28 @@ async function create() {
     const intersects = raycaster.intersectObject(threeMeshes.platform);
     
     if (intersects.length > 0) {
-      targetPoint = intersects[0].point.clone();
-      // Keep target point at platform height
-      targetPoint.y = threeMeshes.platform.position.y + 0.25 + 0.3;
+      const clickPoint = intersects[0].point.clone();
+      // Keep click point at platform height
+      clickPoint.y = threeMeshes.platform.position.y + 0.25 + 0.3;
+      
+      // Calculate direction from player to click point
+      const playerPos = physicsObjects.playerBody.translation();
+      const dir = new THREE.Vector3(
+        clickPoint.x - playerPos.x,
+        0, // Only horizontal movement
+        clickPoint.z - playerPos.z
+      );
+      
+      const distance = dir.length();
+      
+      if (distance > 0.1) {
+        dir.normalize();
+        // Scale force based on distance, capped at max force
+        const scaledForce = Math.min(distance * playerMoveForce, playerMaxForce);
+        // Apply impulse once on mouse down - impulse needs to be strong enough for momentum
+        const impulse = new RAPIER.Vector3(dir.x * scaledForce, 0, dir.z * scaledForce);
+        physicsObjects.playerBody.applyImpulse(impulse, true);
+      }
     }
   });
   
@@ -244,29 +263,6 @@ function update(time, delta) {
   // Step physics simulation
   const timeStep = delta / 1000; // Convert to seconds
   world.step();
-  
-  // Move player toward target point using physics
-  if (targetPoint && physicsObjects.playerBody) {
-    const playerPos = physicsObjects.playerBody.translation();
-    const dir = new THREE.Vector3(
-      targetPoint.x - playerPos.x,
-      targetPoint.y - playerPos.y,
-      targetPoint.z - playerPos.z
-    );
-    
-    const distance = dir.length();
-    
-    if (distance > 0.1) {
-      dir.normalize();
-      // Scale force based on distance, capped at max force
-      const scaledForce = Math.min(distance * playerMoveForce, playerMaxForce);
-      // Apply impulse to move player (force scales with distance)
-      const impulse = new RAPIER.Vector3(dir.x * scaledForce, 0, dir.z * scaledForce);
-      physicsObjects.playerBody.applyImpulse(impulse, true);
-    } else {
-      targetPoint = null;
-    }
-  }
   
   // Sync physics bodies with Three.js meshes
   if (physicsObjects.playerBody && threeMeshes.player) {
