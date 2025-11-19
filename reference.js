@@ -2,12 +2,7 @@ import * as THREE from 'three';
 
 // --- Scene Setup ---
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -50,7 +45,6 @@ message.style.display = 'none';
 message.style.borderRadius = '6px';
 document.body.appendChild(message);
 
-
 // --- Player Box ---
 const playerGeometry = new THREE.BoxGeometry(0.6, 0.6, 0.6);
 const playerMaterial = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
@@ -68,7 +62,7 @@ let mouse = new THREE.Vector2();
 let raycaster = new THREE.Raycaster();
 let targetPoint = null;
 
-window.addEventListener('mousedown', (event) => {
+window.addEventListener('mousedown', event => {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -131,12 +125,13 @@ function applyPhysics() {
 
   // --- Loss Condition (block reaches platform edge) ---
   const halfSize = 5;
-  if (!gameOver && (
-    block.position.x < -halfSize ||
-    block.position.x > halfSize ||
-    block.position.z < -halfSize ||
-    block.position.z > halfSize
-  )) {
+  if (
+    !gameOver &&
+    (block.position.x < -halfSize ||
+      block.position.x > halfSize ||
+      block.position.z < -halfSize ||
+      block.position.z > halfSize)
+  ) {
     showMessage('You Lose!');
   }
 }
@@ -151,4 +146,3 @@ function animate() {
   renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
-
