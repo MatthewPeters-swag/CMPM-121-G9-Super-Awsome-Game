@@ -39,6 +39,7 @@ let threeMeshes = {
 let gameOver = false;
 let targetPoint = null;
 let playerMoveForce = 0.08;
+let playerMaxForce = 0.25; // Maximum force cap for far clicks
 let playerFriction = 1;
 
 // --- UI Message ---
@@ -253,10 +254,14 @@ function update(time, delta) {
       targetPoint.z - playerPos.z
     );
     
-    if (dir.length() > 0.1) {
+    const distance = dir.length();
+    
+    if (distance > 0.1) {
       dir.normalize();
-      // Apply impulse to move player (reduced force for smoother movement)
-      const impulse = new RAPIER.Vector3(dir.x * playerMoveForce, 0, dir.z * playerMoveForce);
+      // Scale force based on distance, capped at max force
+      const scaledForce = Math.min(distance * playerMoveForce, playerMaxForce);
+      // Apply impulse to move player (force scales with distance)
+      const impulse = new RAPIER.Vector3(dir.x * scaledForce, 0, dir.z * scaledForce);
       physicsObjects.playerBody.applyImpulse(impulse, true);
     } else {
       targetPoint = null;
