@@ -15,22 +15,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2. Setup Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "18"
 
+      # 3. Install dependencies
       - name: Install dependencies
         run: npm install
 
+      # 4. Build the Vite project
       - name: Build the game (Vite)
         run: npm run build
 
+      # 5. Upload the production build to GitHub Pages
       - name: Upload production build
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v2
         with:
           path: ./dist
 
@@ -38,5 +43,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # 6. Deploy uploaded artifact to GitHub Pages
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v1
