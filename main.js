@@ -115,6 +115,16 @@ async function create() {
   try {
     // Initialize physics
     await initPhysics();
+    // Expose test API for integration tests (allows tests to inspect/manipulate physics objects)
+    // Tests can use `window.__TEST_API__` to move bodies or trigger game condition checks.
+    // This is intentionally only a testing helper and does not affect gameplay.
+    // Example usage in tests: window.__TEST_API__.physicsObjects.block.body.setTranslation({x:3,y:...,z:-2}, true)
+    window.__TEST_API__ = {
+      physicsObjects,
+      showMessage,
+      checkGameConditions,
+      world,
+    };
   } catch {
     // Still render the scene even if physics fails
     renderer.render(scene, camera);
