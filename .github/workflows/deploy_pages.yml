@@ -44,6 +44,18 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # Debug: show run id and list artifacts for this run
+      - name: Debug run artifacts
+        env:
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          echo "GITHUB_RUN_ID=$RUN_ID"
+          echo "Listing artifacts for run $RUN_ID in repo $REPO"
+          curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${REPO}/actions/runs/${RUN_ID}/artifacts" \
+            | sed -n '1,200p'
+
       # 6. Deploy uploaded artifact to GitHub Pages
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v1
