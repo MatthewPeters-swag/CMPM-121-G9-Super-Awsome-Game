@@ -1,7 +1,10 @@
 export default {
-  // Lint and format JS files
-  // lint-staged automatically respects .gitignore, so node_modules/dist/build won't be processed
-  '*.js': ['eslint --fix --max-warnings=0', 'prettier --write'],
-  // Format JSON and MD files
-  '*.{json,md}': ['prettier --write'],
+  // Only lint source files, not config files
+  "src/**/*.js": ["eslint --fix", "prettier --write"],
+
+  // Format markdown and json in project root
+  "*.md": ["prettier --write"],
+  // Only run Prettier on top-level package files, not every JSON (avoids node_modules)
+  "package.json": ["prettier --write"],
+  "package-lock.json": ["prettier --write"]
 };
