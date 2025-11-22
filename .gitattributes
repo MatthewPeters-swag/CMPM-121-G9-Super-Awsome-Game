@@ -1,0 +1,4 @@
+chrome/** filter=lfs diff=lfs merge=lfs -text
+butler.zip filter=lfs diff=lfs merge=lfs -text
+7z.so filter=lfs diff=lfs merge=lfs -text
+libc7zip.so filter=lfs diff=lfs merge=lfs -text
