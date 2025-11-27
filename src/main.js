@@ -137,11 +137,17 @@ async function create() {
       -(pointer.y / window.innerHeight) * 2 + 1
     );
 
-    // Raycast to find click position on platform
+    // Raycast to check for clicks
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObject(physicsObjects.platform.mesh);
 
+    // Check if key was clicked first
+    if (physicsObjects.key && physicsObjects.key.checkClick(raycaster)) {
+      return; // Key click handled, don't move player
+    }
+
+    // Check for click on platform to move player
+    const intersects = raycaster.intersectObject(physicsObjects.platform.mesh);
     if (intersects.length > 0) {
       const clickPoint = intersects[0].point.clone();
       // Keep click point at platform height
