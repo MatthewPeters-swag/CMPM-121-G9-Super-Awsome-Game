@@ -5,7 +5,8 @@ import { Player } from './player.js';
 import { Platform } from './platform.js';
 import { Block } from './block.js';
 import { Goal } from './goal.js';
-import { handleResize, checkGameConditions } from './utils.js';
+import { Key } from './key.js';
+import { handleResize, checkBlockGoal, isGameOver, showMessage } from './utils.js';
 
 // --- Three.js Scene Setup ---
 const scene = new THREE.Scene();
@@ -25,6 +26,7 @@ let physicsObjects = {
   block: null,
   player: null,
   goal: null,
+  key: null,
 };
 
 // --- Game State ---
@@ -47,12 +49,6 @@ Object.assign(message.style, {
   zIndex: '1000',
 });
 document.body.appendChild(message);
-
-function showMessage(text) {
-  message.textContent = text;
-  message.style.display = 'block';
-  gameOver = true;
-}
 
 // --- Initialize Physics World ---
 async function initPhysics() {
@@ -121,8 +117,9 @@ async function create() {
     // Example usage in tests: window.__TEST_API__.physicsObjects.block.body.setTranslation({x:3,y:...,z:-2}, true)
     window.__TEST_API__ = {
       physicsObjects,
-      showMessage,
-      checkGameConditions,
+      showMessage: text => showMessage(message, text),
+      checkBlockGoal,
+      isGameOver,
       world,
     };
   } catch {
@@ -140,11 +137,17 @@ async function create() {
       -(pointer.y / window.innerHeight) * 2 + 1
     );
 
-    // Raycast to find click position on platform
+    // Raycast to check for clicks
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObject(physicsObjects.platform.mesh);
 
+    // Check if key was clicked first
+    if (physicsObjects.key && physicsObjects.key.checkClick(raycaster)) {
+      return; // Key click handled, don't move player
+    }
+
+    // Check for click on platform to move player
+    const intersects = raycaster.intersectObject(physicsObjects.platform.mesh);
     if (intersects.length > 0) {
       const clickPoint = intersects[0].point.clone();
       // Keep click point at platform height
@@ -171,8 +174,18 @@ function update(_time, _delta) {
   const visualUpdateObjects = [physicsObjects.player, physicsObjects.block].filter(Boolean);
   visualUpdateObjects.forEach(obj => obj.updateVisual());
 
-  // Check game conditions
-  checkGameConditions({ gameOver, physicsObjects, showMessage });
+  // Check if block is at goal
+  const blockAtGoal = checkBlockGoal(physicsObjects);
+  if (blockAtGoal) {
+    // If player completes the puzzle and a key hasn't been spawned yet, spawn a key
+    if (!physicsObjects.key && physicsObjects.platform) {
+      const keyPosition = new THREE.Vector3(0, physicsObjects.platform.top + 1, 0);
+      physicsObjects.key = new Key(world, scene, keyPosition);
+    }
+  }
+
+  // Check if game is over (player or block off platform)
+  gameOver = isGameOver(physicsObjects, message);
 
   // Render Three.js scene
   renderer.render(scene, camera);
