@@ -32,11 +32,22 @@ export class Key {
     tip.rotation.z = Math.PI / 2;
     tip.position.x = 0.6;
 
+    // Create a larger invisible hitbox for easier clicking
+    const hitboxGeometry = new THREE.BoxGeometry(1.2, 0.5, 0.5);
+    const hitboxMaterial = new THREE.MeshBasicMaterial({
+      visible: false, // Make it invisible
+      transparent: true,
+      opacity: 0,
+    });
+    const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
+    hitbox.position.x = 0.3; // Center it on the key
+
     // Combine all parts into a single group
     this.mesh = new THREE.Group();
     this.mesh.add(head);
     this.mesh.add(shaft);
     this.mesh.add(tip);
+    this.mesh.add(hitbox); // Add the larger hitbox
 
     // Set position
     this.mesh.position.set(position.x, position.y, position.z);
