@@ -7,3 +7,8 @@ build/
 .idea/
 
 chrome/
+
+# Binary files (Butler/7-Zip dependencies - should not be version controlled)
+7z.so
+butler.zip
+libc7zip.so
