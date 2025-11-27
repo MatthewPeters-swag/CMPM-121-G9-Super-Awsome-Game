@@ -37,17 +37,18 @@ export function checkBlockGoal(physicsObjects) {
 /**
  * Checks if the game is over (player or block is off the platform)
  * @param {Object} physicsObjects - Physics objects (block, player, platform)
+ * @param {HTMLElement} messageElement - The message DOM element
  * @returns {boolean} True if player or block is off the platform, false otherwise
  */
-export function isGameOver(physicsObjects) {
+export function isGameOver(physicsObjects, messageElement) {
   const platformHalfSize = physicsObjects.platform?.halfSize;
   if (!platformHalfSize) return false;
 
-  if (physicsObjects.block?.isOffPlatform(platformHalfSize)) {
-    return true;
-  }
-
-  if (physicsObjects.player?.isOffPlatform(platformHalfSize)) {
+  if (
+    physicsObjects.block?.isOffPlatform(platformHalfSize) ||
+    physicsObjects.player?.isOffPlatform(platformHalfSize)
+  ) {
+    showMessage(messageElement, 'You Lose!');
     return true;
   }
 

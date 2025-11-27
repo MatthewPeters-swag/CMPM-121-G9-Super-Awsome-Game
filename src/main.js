@@ -179,10 +179,7 @@ function update(_time, _delta) {
   }
 
   // Check if game is over (player or block off platform)
-  if (isGameOver(physicsObjects)) {
-    showMessage(message, 'You Lose!');
-    gameOver = true;
-  }
+  gameOver = isGameOver(physicsObjects, message);
 
   // Render Three.js scene
   renderer.render(scene, camera);
