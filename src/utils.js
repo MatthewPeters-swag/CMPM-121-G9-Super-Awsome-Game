@@ -16,33 +16,38 @@ export function handleResize(camera, renderer, game) {
 }
 
 /**
- * Checks game win/loss conditions
- * @param {Object} state - Game state object
- * @param {boolean} state.gameOver - Whether the game is over
- * @param {Object} state.physicsObjects - Physics objects (block, player, goal, platform)
- * @param {Function} state.showMessage - Function to display game messages
- * @returns {boolean} True if a game condition was triggered
+ * Displays a message to the user
+ * @param {HTMLElement} messageElement - The message DOM element
+ * @param {string} text - The message text to display
  */
-export function checkGameConditions({ gameOver, physicsObjects, showMessage }) {
-  if (gameOver) return false;
+export function showMessage(messageElement, text) {
+  messageElement.textContent = text;
+  messageElement.style.display = 'block';
+}
 
-  // Check win condition (block touches goal)
-  if (physicsObjects.block?.isAtGoal(physicsObjects.goal?.mesh)) {
-    showMessage('You Win!');
-    return true;
-  }
+/**
+ * Checks if the block is at the goal
+ * @param {Object} physicsObjects - Physics objects (block, goal)
+ * @returns {boolean} True if block is at goal, false otherwise
+ */
+export function checkBlockGoal(physicsObjects) {
+  return physicsObjects.block?.isAtGoal(physicsObjects.goal?.mesh) ?? false;
+}
 
-  // Check loss conditions
+/**
+ * Checks if the game is over (player or block is off the platform)
+ * @param {Object} physicsObjects - Physics objects (block, player, platform)
+ * @returns {boolean} True if player or block is off the platform, false otherwise
+ */
+export function isGameOver(physicsObjects) {
   const platformHalfSize = physicsObjects.platform?.halfSize;
   if (!platformHalfSize) return false;
 
   if (physicsObjects.block?.isOffPlatform(platformHalfSize)) {
-    showMessage('You Lose!');
     return true;
   }
 
   if (physicsObjects.player?.isOffPlatform(platformHalfSize)) {
-    showMessage('You Lose!');
     return true;
   }
 
