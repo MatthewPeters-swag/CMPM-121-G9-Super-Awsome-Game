@@ -6,6 +6,7 @@ import { Platform } from './platform.js';
 import { Block } from './block.js';
 import { Goal } from './goal.js';
 import { Key } from './key.js';
+import { inventory } from './inventory.js';
 import { handleResize, checkBlockGoal, isGameOver, showMessage } from './utils.js';
 
 // --- Three.js Scene Setup ---
@@ -31,6 +32,7 @@ let physicsObjects = {
 
 // --- Game State ---
 let gameOver = false;
+let keySpawned = false; // Track if the key has already been spawned
 
 // --- UI Message ---
 const message = document.createElement('div');
@@ -143,6 +145,8 @@ async function create() {
 
     // Check if key was clicked first
     if (physicsObjects.key && physicsObjects.key.checkClick(raycaster)) {
+      physicsObjects.key.destroy(); // Remove key from scene and physics
+      physicsObjects.key = null;
       return; // Key click handled, don't move player
     }
 
@@ -174,14 +178,18 @@ function update(_time, _delta) {
   const visualUpdateObjects = [physicsObjects.player, physicsObjects.block].filter(Boolean);
   visualUpdateObjects.forEach(obj => obj.updateVisual());
 
-  // Check if block is at goal
   const blockAtGoal = checkBlockGoal(physicsObjects);
-  if (blockAtGoal) {
-    // If player completes the puzzle and a key hasn't been spawned yet, spawn a key
-    if (!physicsObjects.key && physicsObjects.platform) {
-      const keyPosition = new THREE.Vector3(0, physicsObjects.platform.top + 1, 0);
-      physicsObjects.key = new Key(world, scene, keyPosition);
-    }
+  if (blockAtGoal && !keySpawned) {
+    // Spawn key only once
+    const keyPosition = new THREE.Vector3(0, physicsObjects.platform.top + 1, 0);
+    physicsObjects.key = new Key(world, scene, keyPosition);
+
+    // Assign onClick behavior
+    physicsObjects.key.onClick = () => {
+      inventory.addItem('key');
+    };
+
+    keySpawned = true; // Prevent further spawning
   }
 
   // Check if game is over (player or block off platform)
