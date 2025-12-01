@@ -6,6 +6,7 @@ import { Platform } from './platform.js';
 import { Block } from './block.js';
 import { Goal } from './goal.js';
 import { Key } from './key.js';
+import { Teleporter } from './teleporter.js';
 import { inventory } from './inventory.js';
 import { handleResize, checkBlockGoal, isGameOver, showMessage } from './utils.js';
 
@@ -28,6 +29,7 @@ let physicsObjects = {
   player: null,
   goal: null,
   key: null,
+  teleporter: null,
 };
 
 // --- Game State ---
@@ -52,11 +54,71 @@ Object.assign(message.style, {
 });
 document.body.appendChild(message);
 
+// --- Clear Scene Function ---
+function clearScene() {
+  // Remove all physics objects from world
+  if (world) {
+    // Remove colliders and bodies
+    Object.values(physicsObjects).forEach(obj => {
+      if (obj && obj.collider) {
+        world.removeCollider(obj.collider, true);
+      }
+      if (obj && obj.body) {
+        world.removeRigidBody(obj.body);
+      }
+      // Remove mesh from scene
+      if (obj && obj.mesh) {
+        scene.remove(obj.mesh);
+        if (obj.mesh.geometry) obj.mesh.geometry.dispose();
+        if (obj.mesh.material) obj.mesh.material.dispose();
+      }
+    });
+  }
+
+  // Reset physics objects
+  physicsObjects = {
+    platform: null,
+    block: null,
+    player: null,
+    goal: null,
+    key: null,
+    teleporter: null,
+  };
+
+  // Reset game state
+  keySpawned = false;
+  gameOver = false;
+}
+
+// --- Load Scene Function ---
+async function loadScene(sceneNumber) {
+  clearScene();
+
+  if (sceneNumber === 1) {
+    await loadScene1();
+  } else if (sceneNumber === 2) {
+    await loadScene2();
+  }
+
+  showMessage(message, `Scene ${sceneNumber} loaded!`);
+  setTimeout(() => {
+    message.style.display = 'none';
+  }, 2000);
+}
+
 // --- Initialize Physics World ---
 async function initPhysics() {
   // Create physics world with gravity
-  world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
+  if (!world) {
+    world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
+  }
 
+  // Load the first scene
+  await loadScene1();
+}
+
+// --- Scene 1: Original Scene ---
+async function loadScene1() {
   // Create platform
   physicsObjects.platform = new Platform(world, scene);
 
@@ -66,6 +128,20 @@ async function initPhysics() {
   // Create goal area
   physicsObjects.goal = new Goal(world, scene, physicsObjects.platform.top);
 
+  // Create teleporter in top left corner
+  physicsObjects.teleporter = new Teleporter(world, scene, physicsObjects.platform.top);
+
+  // Set up teleporter event handler to load scene 2
+  physicsObjects.teleporter.onPlayerEnter = () => {
+    if (!gameOver) {
+      showMessage(message, 'Teleporting to Scene 2...');
+      gameOver = true; // Prevent further actions during transition
+      setTimeout(() => {
+        loadScene(2);
+      }, 1000);
+    }
+  };
+
   // Create player
   physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, {
     friction: 0.75,
@@ -74,6 +150,51 @@ async function initPhysics() {
   });
 
   // --- Camera ---
+  camera.position.set(6, 10, 6);
+  camera.lookAt(0, 0, 0);
+}
+
+// --- Scene 2: New Scene with Different Layout ---
+async function loadScene2() {
+  // Create platform (same as scene 1)
+  physicsObjects.platform = new Platform(world, scene);
+
+  // No block or goal in this scene - just the platform and teleporter
+
+  // Create teleporter to go back to scene 1 (different position - top right)
+  physicsObjects.teleporter = new Teleporter(
+    world,
+    scene,
+    physicsObjects.platform.top,
+    new THREE.Vector3(4, 0, -4)
+  );
+
+  // Set up teleporter event handler to go back to scene 1
+  physicsObjects.teleporter.onPlayerEnter = () => {
+    if (!gameOver) {
+      showMessage(message, 'Teleporting back to Scene 1...');
+      gameOver = true; // Prevent further actions during transition
+      setTimeout(() => {
+        loadScene(1);
+      }, 1000);
+    }
+  };
+
+  // Create player in a different starting position
+  physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, {
+    friction: 0.75,
+    minForce: 1.0,
+    maxForce: 3.0,
+  });
+  // Move player to starting position
+  if (physicsObjects.player.body) {
+    physicsObjects.player.body.setTranslation(
+      { x: 0, y: physicsObjects.platform.top + 0.3, z: -2 },
+      true
+    );
+  }
+
+  // --- Camera (same position) ---
   camera.position.set(6, 10, 6);
   camera.lookAt(0, 0, 0);
 }
@@ -190,6 +311,14 @@ function update(_time, _delta) {
     };
 
     keySpawned = true; // Prevent further spawning
+  }
+
+  // Check if player is touching the teleporter
+  if (
+    physicsObjects.teleporter &&
+    physicsObjects.teleporter.isPlayerTouching(world, physicsObjects.player)
+  ) {
+    physicsObjects.teleporter.trigger();
   }
 
   // Check if game is over (player or block off platform)

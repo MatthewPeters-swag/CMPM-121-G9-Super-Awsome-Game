@@ -15,6 +15,7 @@ export default [
         window: 'readonly',
         document: 'readonly',
         console: 'readonly',
+        setTimeout: 'readonly',
         THREE: 'readonly',
         Phaser: 'readonly',
         RAPIER: 'readonly',
@@ -28,6 +29,24 @@ export default [
       'prettier/prettier': 'error',
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       'no-console': 'off',
+    },
+  },
+  // Node.js environment for test files
+  {
+    files: ['test/**/*.js', 'test/**/*.cjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'commonjs',
+      globals: {
+        require: 'readonly',
+        module: 'readonly',
+        exports: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        process: 'readonly',
+        console: 'readonly',
+        setTimeout: 'readonly',
+      },
     },
   },
 ];
