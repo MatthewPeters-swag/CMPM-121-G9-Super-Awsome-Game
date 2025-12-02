@@ -35,6 +35,7 @@ let physicsObjects = {
 // --- Game State ---
 let gameOver = false;
 let keySpawned = false; // Track if the key has already been spawned
+const requestAnimationFrame = window.requestAnimationFrame.bind(window);
 
 // --- UI Message ---
 const message = document.createElement('div');
@@ -173,7 +174,7 @@ async function loadScene2() {
   physicsObjects.teleporter.onPlayerEnter = () => {
     if (!gameOver) {
       showMessage(message, 'Teleporting back to Scene 1...');
-      gameOver = true; // Prevent further actions during transition
+      gameOver = true;
       setTimeout(() => {
         loadScene(1);
       }, 1000);
@@ -186,7 +187,7 @@ async function loadScene2() {
     minForce: 1.0,
     maxForce: 3.0,
   });
-  // Move player to starting position
+
   if (physicsObjects.player.body) {
     physicsObjects.player.body.setTranslation(
       { x: 0, y: physicsObjects.platform.top + 0.3, z: -2 },
@@ -194,9 +195,50 @@ async function loadScene2() {
     );
   }
 
-  // --- Camera (same position) ---
   camera.position.set(6, 10, 6);
   camera.lookAt(0, 0, 0);
+
+  // Load the Locked Door (WIN door)
+  import('./lockedDoor.js').then(({ LockedDoor }) => {
+    const doorPos = new THREE.Vector3(-4, physicsObjects.platform.top, 3);
+    const dummyDestination = new THREE.Vector3(0, physicsObjects.platform.top, 0);
+
+    physicsObjects.lockedDoor = new LockedDoor(
+      world,
+      scene,
+      physicsObjects.player, // ✔ FIXED
+      dummyDestination,
+      doorPos
+    );
+
+    physicsObjects.lockedDoor.onWin = () => {
+      import('./GameWinScene.js').then(({ showWinScreen }) => {
+        showWinScreen();
+      });
+    };
+  });
+
+  // Check each frame if player touches the door
+  const checkDoorWin = () => {
+    if (
+      physicsObjects.lockedDoor &&
+      physicsObjects.lockedDoor.doorMesh &&
+      physicsObjects.player.body
+    ) {
+      const p = physicsObjects.player.body.position; // ✔ FIXED
+      const d = physicsObjects.lockedDoor.doorMesh.position;
+
+      const dist = Math.sqrt((p.x - d.x) ** 2 + (p.y - d.y) ** 2 + (p.z - d.z) ** 2);
+
+      if (dist < 1.2 && physicsObjects.lockedDoor.onWin) {
+        physicsObjects.lockedDoor.onWin();
+      }
+    }
+
+    requestAnimationFrame(checkDoorWin);
+  };
+
+  checkDoorWin();
 }
 
 // --- Phaser Game Configuration ---
