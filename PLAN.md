@@ -318,17 +318,46 @@ Use an external DSL to define important design details in the game, with tool su
 
 ### Phase 1: Choose DSL Format
 
-- [ ] Evaluate DSL format options:
+- [x] Evaluate DSL format options:
   - JSON (structured, easy to parse, widely supported)
-- [ ] Select JSON as the DSL format (recommended for web projects)
-- [ ] Document the decision rationale
+  - YAML (human-readable, but requires additional parsing library)
+  - TOML (simple, but less common in web projects)
+  - Custom format (more flexible but requires custom parser)
+- [x] Select JSON as the DSL format (recommended for web projects)
+- [x] Document the decision rationale
+
+#### Decision Rationale:
+
+**Selected Format: JSON**
+
+**Reasons:**
+
+1. **Native Browser Support**: JSON is natively supported in JavaScript via `JSON.parse()` and `JSON.stringify()`, requiring no additional dependencies
+2. **Wide Tooling Support**: JSON has excellent tooling support in VS Code and other editors:
+   - Built-in syntax highlighting
+   - JSON Schema validation support
+   - Autocomplete capabilities
+   - Error detection and validation
+3. **Web Ecosystem Alignment**: JSON is the standard data interchange format for web applications, making it familiar to developers
+4. **Human-Readable**: While not as concise as YAML, JSON is still human-readable and easy to edit
+5. **Type Safety**: JSON Schema can provide strong validation and type checking
+6. **No Build Step Required**: JSON files can be loaded directly without preprocessing or compilation
+7. **Version Control Friendly**: JSON files work well with git diff and merge tools
+
+**Considered Alternatives:**
+
+- **YAML**: More human-readable but requires a parsing library (e.g., `js-yaml`), adding a dependency
+- **TOML**: Simple and readable but less common in JavaScript/web projects
+- **Custom Format**: Would require custom parser development, adding unnecessary complexity
+
+**Conclusion**: JSON provides the best balance of simplicity, tooling support, and zero-dependency integration for this web-based game project.
 
 ### Phase 2: Design DSL Schema
 
-- [ ] Identify game design elements to externalize:
+- [x] Identify game design elements to externalize:
   - Player physics properties: friction, minForce, maxForce, linearDamping, angularDamping
   - Block physics properties: linearDamping, angularDamping, friction, density
-- [ ] Design JSON schema for player configuration:
+- [x] Design JSON schema for player configuration:
   ```json
   {
     "player": {
@@ -340,7 +369,7 @@ Use an external DSL to define important design details in the game, with tool su
     }
   }
   ```
-- [ ] Design JSON schema for block configuration:
+- [x] Design JSON schema for block configuration:
   ```json
   {
     "block": {
@@ -351,7 +380,43 @@ Use an external DSL to define important design details in the game, with tool su
     }
   }
   ```
-- [ ] Create a schema documentation file (`docs/dsl-schema.md`)
+- [x] Create a schema documentation file (`docs/dsl-schema.md`)
+
+#### Implementation Details:
+
+**Created Files:**
+
+- `docs/dsl-schema.md` - Comprehensive schema documentation including:
+  - Complete schema structure for player and block configurations
+  - Property descriptions with types, defaults, ranges, and usage notes
+  - Validation rules and constraints
+  - Complete examples
+  - Usage notes for physics tuning
+  - Future extensibility considerations
+
+**Schema Design:**
+
+**Player Configuration:**
+
+- `friction` (number, default: 0.75, range: 0.0-1.0) - Friction coefficient
+- `minForce` (number, default: 1.0, range: > 0) - Base force multiplier
+- `maxForce` (number, default: 3.0, range: > 0, must be >= minForce) - Maximum force cap
+- `linearDamping` (number, default: 0.3, range: >= 0) - Linear velocity damping
+- `angularDamping` (number, default: 0.8, range: >= 0) - Angular velocity damping
+
+**Block Configuration:**
+
+- `linearDamping` (number, default: 0.2, range: >= 0) - Linear velocity damping
+- `angularDamping` (number, default: 0.3, range: >= 0) - Angular velocity damping
+- `friction` (number, default: 0.3, range: 0.0-1.0) - Friction coefficient
+- `density` (number, default: 0.5, range: > 0) - Block density (affects mass)
+
+**Key Features:**
+
+- All properties documented with types, defaults, ranges, and descriptions
+- Validation rules specified for type and range checking
+- Default fallback values documented for error handling
+- Extensible design for future additions
 
 ### Phase 3: Create DSL Files
 
