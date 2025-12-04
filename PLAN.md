@@ -420,8 +420,8 @@ Use an external DSL to define important design details in the game, with tool su
 
 ### Phase 3: Create DSL Files
 
-- [ ] Create `data/` directory for DSL configuration files
-- [ ] Create `data/physics-config.json` with player and block physics properties:
+- [x] Create `data/` directory for DSL configuration files
+- [x] Create `data/physics-config.json` with player and block physics properties:
   ```json
   {
     "player": {
@@ -439,7 +439,38 @@ Use an external DSL to define important design details in the game, with tool su
     }
   }
   ```
-- [ ] Populate DSL file with current game configuration values from `src/player.js` and `src/block.js`
+- [x] Populate DSL file with current game configuration values from `src/player.js` and `src/block.js`
+
+#### Implementation Details:
+
+**Created Files:**
+
+- `data/physics-config.json` - Physics configuration DSL file containing:
+  - Player configuration with all 5 properties (friction, minForce, maxForce, linearDamping, angularDamping)
+  - Block configuration with all 4 properties (linearDamping, angularDamping, friction, density)
+
+**Value Sources:**
+
+**Player Values:**
+
+- `friction: 0.75` - From `src/main.js` (lines 157, 195)
+- `minForce: 1.0` - From `src/main.js` (lines 158, 196)
+- `maxForce: 3.0` - From `src/main.js` (lines 159, 197)
+- `linearDamping: 0.3` - From `src/player.js` (line 34, hardcoded)
+- `angularDamping: 0.8` - From `src/player.js` (line 35, hardcoded)
+
+**Block Values:**
+
+- `linearDamping: 0.2` - From `src/block.js` (line 20, default)
+- `angularDamping: 0.3` - From `src/block.js` (line 20, default)
+- `friction: 0.3` - From `src/block.js` (line 20, default)
+- `density: 0.5` - From `src/block.js` (line 20, default)
+
+**File Structure:**
+
+- Created `data/` directory for DSL configuration files
+- JSON file follows the schema defined in Phase 2
+- All values match current game implementation
 
 ### Phase 4: Implement DSL Parser/Loader
 
