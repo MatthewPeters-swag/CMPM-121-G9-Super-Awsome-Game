@@ -646,13 +646,78 @@ Use an external DSL to define important design details in the game, with tool su
 
 ### Phase 7: Enhanced Tool Support (Optional)
 
-- [ ] Create a simple DSL validator script (`scripts/validate-dsl.js`) that:
+- [x] Create a simple DSL validator script (`scripts/validate-dsl.js`) that:
   - Validates `data/physics-config.json` against the schema
   - Checks that all required properties are present
   - Validates numeric ranges (e.g., friction should be 0-1, forces should be positive)
-- [ ] Add validation to build process (optional)
-- [ ] Create example DSL files demonstrating different physics configurations
-- [ ] Document DSL best practices and patterns for physics tuning
+- [x] Add validation to build process (optional)
+- [x] Create example DSL files demonstrating different physics configurations
+- [x] Document DSL best practices and patterns for physics tuning
+
+#### Implementation Details:
+
+**Created Files:**
+
+- `scripts/validate-dsl.js` - Command-line validator script with:
+  - Validates JSON syntax
+  - Validates all required properties are present
+  - Validates numeric types and ranges
+  - Validates constraints (maxForce >= minForce)
+  - Provides detailed error messages
+  - Shows configuration summary on success
+  - Exit codes for CI/CD integration (0 = success, 1 = failure)
+  - Can validate any config file path (defaults to `public/data/physics-config.json`)
+  - Executable permissions set
+
+- `public/data/examples/physics-config-easy.json` - Easy mode configuration:
+  - High friction (0.9) for better control
+  - Increased forces (1.5, 4.0) for responsiveness
+  - Light blocks (density 0.3) for easier pushing
+
+- `public/data/examples/physics-config-hard.json` - Hard mode configuration:
+  - Lower friction (0.5) for less control
+  - Reduced forces (0.8, 2.5) for slower movement
+  - Heavy blocks (density 0.8) for harder pushing
+
+- `public/data/examples/physics-config-ice.json` - Ice physics configuration:
+  - Very low friction (0.1) for sliding
+  - Low damping (0.1, 0.2) for momentum
+  - Light blocks that slide easily
+
+- `public/data/examples/physics-config-heavy.json` - Heavy physics configuration:
+  - High friction (0.85) for control
+  - High forces (2.0, 5.0) for power
+  - Very heavy blocks (density 1.5) for weighty feel
+
+- `public/data/examples/physics-config-responsive.json` - Responsive controls configuration:
+  - High friction (0.8) for control
+  - High forces (2.0, 4.5) for responsiveness
+  - Low damping (0.15) for quick movement
+
+- `docs/dsl-best-practices.md` - Comprehensive best practices guide including:
+  - General principles for tuning physics
+  - Player physics tuning guide (responsive, less responsive, controllable, slippery)
+  - Block physics tuning guide (easy to push, hard to push, stable, slides easily)
+  - Common patterns (easy mode, hard mode, ice physics, heavy physics)
+  - Troubleshooting guide for common problems
+  - Workflow recommendations
+  - Property interaction guide
+  - Quick reference tables
+
+**Build Process Integration:**
+
+- Added `validate:dsl` script to `package.json`
+- Integrated into build process: `build` script now runs `validate:dsl` before building
+- Build will fail if DSL file is invalid, preventing broken configurations from being deployed
+
+**Key Features:**
+
+- **Command-Line Validation**: Run `npm run validate:dsl` to validate configuration
+- **Build Integration**: Automatic validation during build process
+- **Example Configurations**: 5 example files demonstrating different physics feels
+- **Best Practices**: Comprehensive guide for tuning physics properties
+- **Error Messages**: Detailed error messages help identify and fix issues
+- **CI/CD Ready**: Exit codes and clear output suitable for automated testing
 
 ### Phase 8: Testing and Documentation
 
