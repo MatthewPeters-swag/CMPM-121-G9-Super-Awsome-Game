@@ -578,17 +578,71 @@ Use an external DSL to define important design details in the game, with tool su
 
 ### Phase 6: Create Tool Support (Syntax Highlighting)
 
-- [ ] Create `data/.vscode/settings.json` for VS Code workspace settings
-- [ ] Configure JSON schema association:
+- [x] Create `data/.vscode/settings.json` for VS Code workspace settings
+- [x] Configure JSON schema association:
   - Link `data/physics-config.json` to a JSON schema
   - Enable JSON schema validation in VS Code
-- [ ] Create `data/schemas/physics-config.schema.json` (JSON Schema file):
+- [x] Create `data/schemas/physics-config.schema.json` (JSON Schema file):
   - Define structure for physics configuration DSL
   - Add descriptions and type information for player properties (friction, minForce, maxForce, linearDamping, angularDamping)
   - Add descriptions and type information for block properties (linearDamping, angularDamping, friction, density)
   - Enable autocomplete and validation
   - Include example values and ranges where appropriate
-- [ ] Document how to use schema validation in `docs/dsl-usage.md`
+- [x] Document how to use schema validation in `docs/dsl-usage.md`
+
+#### Implementation Details:
+
+**Created Files:**
+
+- `.vscode/settings.json` - VS Code workspace settings with:
+  - JSON schema association for `physics-config.json`
+  - File matching patterns for both `public/data/physics-config.json` and `data/physics-config.json`
+  - Schema URL pointing to `./public/data/schemas/physics-config.schema.json`
+  - JSON validation and formatting enabled
+
+- `public/data/schemas/physics-config.schema.json` - JSON Schema file (Draft 07) with:
+  - Complete schema definition for player and block configurations
+  - Type definitions (all properties are numbers)
+  - Range validation (minimum/maximum values)
+  - Required properties specification
+  - Descriptions for all properties
+  - Example values for each property
+  - Default values documented
+  - Constraint validation (maxForce >= minForce)
+  - Additional properties disabled for strict validation
+
+- `docs/dsl-usage.md` - Comprehensive usage documentation including:
+  - Overview and file location
+  - VS Code editing guide with autocomplete and validation
+  - Manual editing instructions
+  - Complete property reference tables
+  - Example configurations (responsive player, heavy blocks, ice-like physics)
+  - Validation troubleshooting
+  - Best practices
+  - Advanced usage patterns
+
+**Schema Features:**
+
+- **Type Safety**: All properties validated as numbers
+- **Range Validation**:
+  - Friction: 0.0 - 1.0
+  - Forces: > 0
+  - Damping: >= 0
+  - Density: > 0
+- **Constraint Validation**: maxForce must be >= minForce
+- **Autocomplete**: VS Code suggests properties as you type
+- **Hover Documentation**: Descriptions and examples shown on hover
+- **Error Highlighting**: Invalid values highlighted with red squiggles
+- **Required Properties**: Missing required properties are flagged
+
+**VS Code Integration:**
+
+- Schema automatically associated with `physics-config.json`
+- Real-time validation as you type
+- Autocomplete suggestions for property names
+- Hover tooltips with descriptions and ranges
+- Format on save support
+- Error detection before runtime
 
 ### Phase 7: Enhanced Tool Support (Optional)
 
