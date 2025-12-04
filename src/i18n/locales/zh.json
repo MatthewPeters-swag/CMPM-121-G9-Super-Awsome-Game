@@ -1,0 +1,17 @@
+{
+  "scene": {
+    "loaded": "场景 {{sceneNumber}} 已加载！"
+  },
+  "teleporter": {
+    "scene2": "正在传送到场景 2...",
+    "scene1": "正在传送回场景 1..."
+  },
+  "game": {
+    "lose": "你输了！",
+    "win": "你赢了！"
+  },
+  "page": {
+    "title": "我的第一个 three.js 应用"
+  }
+}
+

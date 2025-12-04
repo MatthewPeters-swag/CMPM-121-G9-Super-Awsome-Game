@@ -1,0 +1,17 @@
+{
+  "scene": {
+    "loaded": "Scene {{sceneNumber}} loaded!"
+  },
+  "teleporter": {
+    "scene2": "Teleporting to Scene 2...",
+    "scene1": "Teleporting back to Scene 1..."
+  },
+  "game": {
+    "lose": "You Lose!",
+    "win": "YOU WIN!"
+  },
+  "page": {
+    "title": "My first three.js app"
+  }
+}
+
