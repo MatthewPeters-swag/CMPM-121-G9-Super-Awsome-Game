@@ -42,19 +42,26 @@ async function loadTranslations(lang) {
 
 /**
  * Initializes the translation system
- * @param {string} lang - Initial language code (defaults to browser language or 'en')
+ * @param {string} lang - Initial language code (defaults to localStorage preference, then browser language, then 'en')
  * @returns {Promise<void>}
  */
 export async function initTranslations(lang = null) {
-  // Detect browser language if not provided
+  // Check localStorage first, then browser language if not provided
   if (!lang) {
-    const browserLang = navigator.language || navigator.languages?.[0] || 'en';
-    // Extract base language code (e.g., 'en-US' -> 'en')
-    lang = browserLang.split('-')[0].toLowerCase();
+    // Try to load saved preference from localStorage
+    const savedLang = loadPreferredLanguage();
+    if (savedLang) {
+      lang = savedLang;
+    } else {
+      // Detect browser language if no saved preference
+      const browserLang = navigator.language || navigator.languages?.[0] || 'en';
+      // Extract base language code (e.g., 'en-US' -> 'en')
+      lang = browserLang.split('-')[0].toLowerCase();
 
-    // Map browser language to supported language
-    if (!SUPPORTED_LANGUAGES[lang]) {
-      lang = DEFAULT_LANGUAGE;
+      // Map browser language to supported language
+      if (!SUPPORTED_LANGUAGES[lang]) {
+        lang = DEFAULT_LANGUAGE;
+      }
     }
   }
 

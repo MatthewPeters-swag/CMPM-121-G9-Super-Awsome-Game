@@ -9,6 +9,8 @@ import { Key } from './key.js';
 import { Teleporter } from './teleporter.js';
 import { inventory } from './inventory.js';
 import { handleResize, checkBlockGoal, isGameOver, showMessage } from './utils.js';
+import { initTranslations, t } from './i18n/translations.js';
+import { initLanguageSelector } from './i18n/languageSelector.js';
 
 // --- Three.js Scene Setup ---
 const scene = new THREE.Scene();
@@ -269,6 +271,20 @@ document.body.appendChild(phaserContainer);
 
 // Render initial empty scene
 renderer.render(scene, camera);
+
+// Initialize i18n system
+(async () => {
+  await initTranslations();
+  initLanguageSelector();
+
+  // Update page title with translated text
+  document.title = t('page.title');
+
+  // Listen for language changes to update page title
+  window.addEventListener('languageChanged', () => {
+    document.title = t('page.title');
+  });
+})();
 
 const game = new Phaser.Game(config);
 

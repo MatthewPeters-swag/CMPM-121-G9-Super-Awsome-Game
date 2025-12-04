@@ -98,13 +98,47 @@ Support three different natural languages:
 
 ### Phase 3: Implement Language Detection and Selection
 
-- [ ] Detect browser language preference using `navigator.language` or `navigator.languages`
-- [ ] Create a language selector UI component (dropdown)
-- [ ] Store selected language preference in `localStorage` for persistence
-- [ ] Implement language switching functionality that:
+- [x] Detect browser language preference using `navigator.language` or `navigator.languages`
+- [x] Create a language selector UI component (dropdown)
+- [x] Store selected language preference in `localStorage` for persistence
+- [x] Implement language switching functionality that:
   - Updates all displayed text immediately
   - Handles RTL layout changes for Arabic
   - Updates text direction CSS (`dir="rtl"` for Arabic)
+
+#### Implementation Details:
+
+**Created Files:**
+
+- `src/i18n/languageSelector.js` - Language selector UI component with:
+  - `createLanguageSelector()` - Creates dropdown UI element
+  - `initLanguageSelector()` - Initializes selector and sets up page direction
+  - `updatePageDirection()` - Updates HTML `dir` and `lang` attributes for RTL support
+  - Automatic positioning adjustment for RTL (left vs right positioning)
+  - Language change event dispatching
+
+**Updated Files:**
+
+- `src/i18n/translations.js` - Enhanced `initTranslations()` to:
+  - Check localStorage preference first
+  - Fall back to browser language detection
+  - Fall back to English if unsupported language detected
+
+- `src/main.js` - Integrated i18n system:
+  - Imported translation functions and language selector
+  - Initialize translations on page load
+  - Initialize language selector UI
+  - Update page title with translated text
+  - Listen for language change events to update page title dynamically
+
+**Features:**
+
+- Language selector dropdown positioned in top-right (top-left for RTL)
+- Automatic browser language detection on first visit
+- localStorage persistence of language preference
+- RTL layout support with `dir="rtl"` attribute on HTML element
+- Dynamic language switching with immediate UI updates
+- Language change events for other components to listen to
 
 ### Phase 4: Handle Right-to-Left (RTL) Layout
 
