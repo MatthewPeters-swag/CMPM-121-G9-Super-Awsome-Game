@@ -474,16 +474,51 @@ Use an external DSL to define important design details in the game, with tool su
 
 ### Phase 4: Implement DSL Parser/Loader
 
-- [ ] Create `src/dsl/` directory for DSL-related code
-- [ ] Create `src/dsl/loader.js` module to:
+- [x] Create `src/dsl/` directory for DSL-related code
+- [x] Create `src/dsl/loader.js` module to:
   - Load JSON DSL file (`data/physics-config.json`)
   - Validate schema (optional but recommended)
   - Parse and return physics configuration objects
   - Export functions to get player config and block config
-- [ ] Create `src/dsl/physics-config.js` to:
+- [x] Create `src/dsl/physics-config.js` to:
   - Load physics configuration from DSL file
   - Provide default values if DSL file is missing or invalid
   - Export `getPlayerConfig()` and `getBlockConfig()` functions
+
+#### Implementation Details:
+
+**Created Files:**
+
+- `src/dsl/loader.js` - Core DSL loader module with:
+  - `loadPhysicsConfig(filePath)` - Loads and parses JSON DSL file with error handling
+  - `getPlayerConfig(config)` - Extracts and validates player config from loaded config
+  - `getBlockConfig(config)` - Extracts and validates block config from loaded config
+  - `validatePlayerConfig()` - Validates player configuration schema and ranges
+  - `validateBlockConfig()` - Validates block configuration schema and ranges
+  - `validateConfig()` - Validates complete configuration object
+  - `DEFAULT_CONFIG` - Default fallback values matching current game implementation
+  - Comprehensive validation including:
+    - Type checking (all properties must be numbers)
+    - Range validation (friction 0-1, forces > 0, damping >= 0, density > 0)
+    - Constraint validation (maxForce >= minForce)
+    - Graceful error handling with console warnings
+
+- `src/dsl/physics-config.js` - High-level physics configuration API with:
+  - `getPlayerConfig()` - Async function returning player physics configuration
+  - `getBlockConfig()` - Async function returning block physics configuration
+  - `preloadConfig()` - Preloads configuration for eager loading
+  - Configuration caching to avoid redundant loads
+  - Promise-based API for async loading
+  - Automatic fallback to defaults on load failure
+
+**Key Features:**
+
+- **Error Handling**: Graceful fallback to default values if DSL file is missing or invalid
+- **Validation**: Comprehensive schema and range validation before using loaded values
+- **Caching**: Configuration is cached after first load for performance
+- **Type Safety**: Validates all properties are numbers and within expected ranges
+- **Default Values**: Provides sensible defaults matching current game implementation
+- **Async API**: Promise-based API for loading configuration asynchronously
 
 ### Phase 5: Refactor Game Code to Use DSL
 
