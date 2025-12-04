@@ -211,36 +211,23 @@ async function loadScene2() {
       doorPos
     );
 
+    // Ensure the door is visually purple in Scene 2
+    if (
+      physicsObjects.lockedDoor &&
+      physicsObjects.lockedDoor.mesh &&
+      physicsObjects.lockedDoor.mesh.material
+    ) {
+      physicsObjects.lockedDoor.mesh.material.color = new THREE.Color(0x8000ff);
+      physicsObjects.lockedDoor.mesh.material.needsUpdate = true;
+    }
+
     physicsObjects.lockedDoor.onWin = () => {
       import('./GameWinScene.js').then(({ showWinScreen }) => {
-        showWinScreen();
+        showWinScreen(scene);
       });
     };
   });
-
-  // Check each frame if player touches the door
-  const checkDoorWin = () => {
-    if (
-      physicsObjects.lockedDoor &&
-      physicsObjects.lockedDoor.doorMesh &&
-      physicsObjects.player.body
-    ) {
-      const p = physicsObjects.player.body.position; // ✔ FIXED
-      const d = physicsObjects.lockedDoor.doorMesh.position;
-
-      const dist = Math.sqrt((p.x - d.x) ** 2 + (p.y - d.y) ** 2 + (p.z - d.z) ** 2);
-
-      if (dist < 1.2 && physicsObjects.lockedDoor.onWin) {
-        physicsObjects.lockedDoor.onWin();
-      }
-    }
-
-    requestAnimationFrame(checkDoorWin);
-  };
-
-  checkDoorWin();
 }
-
 // --- Phaser Game Configuration ---
 const config = {
   type: Phaser.HEADLESS, // Use HEADLESS mode since we're not using Phaser's rendering
@@ -333,13 +320,18 @@ function update(_time, _delta) {
     renderer.render(scene, camera);
     return;
   }
-
   // Step physics simulation
   world.step();
 
   // Sync physics bodies with Three.js meshes
   const visualUpdateObjects = [physicsObjects.player, physicsObjects.block].filter(Boolean);
   visualUpdateObjects.forEach(obj => obj.updateVisual());
+
+  // Update locked door logic each frame (unlocking, fade, win trigger)
+  // Run after physics step so intersectionPair checks are current
+  if (physicsObjects.lockedDoor && typeof physicsObjects.lockedDoor.update === 'function') {
+    physicsObjects.lockedDoor.update();
+  }
 
   const blockAtGoal = checkBlockGoal(physicsObjects);
   if (blockAtGoal && !keySpawned) {
