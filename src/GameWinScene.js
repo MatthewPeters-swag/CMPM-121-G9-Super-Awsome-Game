@@ -2,7 +2,7 @@ import * as THREE from 'three';
 // We use a CanvasTexture fallback instead of FontLoader/TextGeometry
 // to avoid relying on an external font file that may 404 in production.
 import { getCSSFontFamily } from './i18n/font-loader.js';
-import { getCurrentLanguage } from './i18n/translations.js';
+import { getCurrentLanguage, t } from './i18n/translations.js';
 import { isRTL } from './i18n/rtl-utils.js';
 
 /**
@@ -40,8 +40,8 @@ export async function showWinScreen(scene, winText) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // Use translated text (defaults to 'YOU WIN!' if not provided)
-  const text = winText || 'YOU WIN!';
+  // Use translated text (defaults to translation if not provided)
+  const text = winText || t('game.win');
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
 

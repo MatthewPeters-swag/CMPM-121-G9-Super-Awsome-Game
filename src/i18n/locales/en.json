@@ -12,6 +12,9 @@
   },
   "page": {
     "title": "My first three.js app"
+  },
+  "ui": {
+    "language": "Language"
   }
 }
 

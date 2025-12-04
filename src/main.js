@@ -110,7 +110,7 @@ async function loadScene(sceneNumber) {
     await loadScene2();
   }
 
-  showMessage(message, `Scene ${sceneNumber} loaded!`);
+  showMessage(message, t('scene.loaded', { sceneNumber }));
   setTimeout(() => {
     message.style.display = 'none';
   }, 2000);
@@ -144,7 +144,7 @@ async function loadScene1() {
   // Set up teleporter event handler to load scene 2
   physicsObjects.teleporter.onPlayerEnter = () => {
     if (!gameOver) {
-      showMessage(message, 'Teleporting to Scene 2...');
+      showMessage(message, t('teleporter.scene2'));
       gameOver = true; // Prevent further actions during transition
       setTimeout(() => {
         loadScene(2);
@@ -182,7 +182,7 @@ async function loadScene2() {
   // Set up teleporter event handler to go back to scene 1
   physicsObjects.teleporter.onPlayerEnter = () => {
     if (!gameOver) {
-      showMessage(message, 'Teleporting back to Scene 1...');
+      showMessage(message, t('teleporter.scene1'));
       gameOver = true;
       setTimeout(() => {
         loadScene(1);
@@ -275,6 +275,12 @@ renderer.render(scene, camera);
 
   // Update page title with translated text
   document.title = t('page.title');
+
+  // Update inventory position after i18n is initialized
+  // (inventory is created as singleton before i18n init, so we need to update it now)
+  if (inventory && typeof inventory.updatePosition === 'function') {
+    inventory.updatePosition();
+  }
 
   // Listen for language changes to update page title
   window.addEventListener('languageChanged', () => {

@@ -12,6 +12,9 @@
   },
   "page": {
     "title": "我的第一个 three.js 应用"
+  },
+  "ui": {
+    "language": "语言"
   }
 }
 

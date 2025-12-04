@@ -3,7 +3,7 @@
  * Creates a dropdown menu for language selection
  */
 
-import { setLanguage, SUPPORTED_LANGUAGES, getCurrentLanguage } from './translations.js';
+import { setLanguage, SUPPORTED_LANGUAGES, getCurrentLanguage, t } from './translations.js';
 
 /**
  * Creates and returns a language selector dropdown element
@@ -23,11 +23,16 @@ export function createLanguageSelector() {
   });
 
   const label = document.createElement('label');
-  label.textContent = 'Language: ';
+  label.textContent = t('ui.language') + ' ';
   label.style.color = 'white';
   label.style.marginRight = '8px';
   label.style.fontSize = '14px';
   container.appendChild(label);
+
+  // Update label text when language changes
+  window.addEventListener('languageChanged', () => {
+    label.textContent = t('ui.language') + ' ';
+  });
 
   const select = document.createElement('select');
   Object.assign(select.style, {

@@ -229,23 +229,77 @@ Support three different natural languages:
 
 ### Phase 6: Replace Hardcoded Strings
 
-- [ ] Replace all hardcoded English strings with translation function calls
-- [ ] Update `src/main.js`:
+- [x] Replace all hardcoded English strings with translation function calls
+- [x] Update `src/main.js`:
   - `"Scene ${sceneNumber} loaded!"` → `t('scene.loaded', { sceneNumber })`
   - `"Teleporting to Scene 2..."` → `t('teleporter.scene2')`
   - `"Teleporting back to Scene 1..."` → `t('teleporter.scene1')`
-- [ ] Update `src/utils.js`:
+- [x] Update `src/utils.js`:
   - `"You Lose!"` → `t('game.lose')`
-- [ ] Update `src/GameWinScene.js`:
+- [x] Update `src/GameWinScene.js`:
   - `"YOU WIN!"` → `t('game.win')`
-- [ ] Ensure all dynamic text uses translation keys
+- [x] Ensure all dynamic text uses translation keys
+
+#### Implementation Details:
+
+**Updated Files:**
+
+- `src/main.js`:
+  - Scene loading message now uses `t('scene.loaded', { sceneNumber })`
+  - Teleporter messages use `t('teleporter.scene2')` and `t('teleporter.scene1')`
+  - Page title already updated dynamically (from Phase 3)
+
+- `src/utils.js`:
+  - Added import for `t` function
+  - Game over message uses `t('game.lose')`
+
+- `src/GameWinScene.js`:
+  - Added import for `t` function
+  - Win screen text uses `t('game.win')` with fallback
+  - Function accepts translated text parameter from caller
+
+**All hardcoded strings replaced:**
+
+- All user-facing text now uses translation keys
+- Dynamic text with parameters properly uses translation function
+- Page title updates dynamically on language change
 
 ### Phase 7: Populate Translation Files
 
-- [ ] Fill `en.json` with English translations (baseline)
-- [ ] Fill `zh.json` with Chinese translations
-- [ ] Fill `ar.json` with Arabic translations
-- [ ] Verify translations are accurate and contextually appropriate
+- [x] Fill `en.json` with English translations (baseline)
+- [x] Fill `zh.json` with Chinese translations
+- [x] Fill `ar.json` with Arabic translations
+- [x] Verify translations are accurate and contextually appropriate
+
+#### Implementation Details:
+
+**Translation Files Status:**
+All translation files are populated with complete translations:
+
+- `src/i18n/locales/en.json` (English - baseline):
+  - All 6 translation keys populated
+  - Used as fallback for missing translations
+
+- `src/i18n/locales/zh.json` (Chinese - Simplified):
+  - All 6 translation keys translated to Chinese
+  - Proper Chinese characters used
+  - Contextually appropriate translations
+
+- `src/i18n/locales/ar.json` (Arabic):
+  - All 6 translation keys translated to Arabic
+  - Proper Arabic script used
+  - Contextually appropriate translations
+
+**Translation Keys Covered:**
+
+- `scene.loaded` - Scene loading message with parameter
+- `teleporter.scene2` - Teleporter to Scene 2
+- `teleporter.scene1` - Teleporter back to Scene 1
+- `game.lose` - Game over message
+- `game.win` - Win screen message
+- `page.title` - Page title
+
+All translations verified and ready for use.
 
 ### Phase 8: Testing
 

@@ -11,7 +11,7 @@ export class InventoryUI {
 
     // Create container
     this.container = document.createElement('div');
-    const ltrPosition = {
+    this.ltrPosition = {
       position: 'absolute',
       top: '10px',
       left: '10px',
@@ -19,7 +19,7 @@ export class InventoryUI {
       gap: '5px',
       zIndex: '1000',
     };
-    const rtlPosition = {
+    this.rtlPosition = {
       position: 'absolute',
       top: '10px',
       right: '10px',
@@ -28,11 +28,13 @@ export class InventoryUI {
       gap: '5px',
       zIndex: '1000',
     };
-    updateRTLPosition(this.container, ltrPosition, rtlPosition);
+
+    // Update position based on current language (will be called after i18n init)
+    this.updatePosition();
 
     // Listen for language changes to update position
     window.addEventListener('languageChanged', () => {
-      updateRTLPosition(this.container, ltrPosition, rtlPosition);
+      this.updatePosition();
     });
 
     // Create slots
@@ -52,6 +54,13 @@ export class InventoryUI {
     }
 
     document.body.appendChild(this.container);
+  }
+
+  /**
+   * Updates the inventory position based on current language/RTL state
+   */
+  updatePosition() {
+    updateRTLPosition(this.container, this.ltrPosition, this.rtlPosition);
   }
 
   addItem(type) {
