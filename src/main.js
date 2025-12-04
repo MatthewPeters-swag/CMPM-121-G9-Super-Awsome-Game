@@ -9,8 +9,9 @@ import { Key } from './key.js';
 import { Teleporter } from './teleporter.js';
 import { inventory } from './inventory.js';
 import { handleResize, checkBlockGoal, isGameOver, showMessage } from './utils.js';
-import { initTranslations, t } from './i18n/translations.js';
+import { initTranslations, t, getCurrentLanguage } from './i18n/translations.js';
 import { initLanguageSelector } from './i18n/languageSelector.js';
+import { getCSSFontFamily } from './i18n/font-loader.js';
 
 // --- Three.js Scene Setup ---
 const scene = new THREE.Scene();
@@ -49,13 +50,19 @@ Object.assign(message.style, {
   padding: '10px 20px',
   background: 'rgba(0,0,0,0.6)',
   color: 'white',
-  fontFamily: 'sans-serif',
+  fontFamily: getCSSFontFamily(getCurrentLanguage()),
   fontSize: '20px',
   display: 'none',
   borderRadius: '6px',
   zIndex: '1000',
+  textAlign: 'center', // Center text for both LTR and RTL
 });
 document.body.appendChild(message);
+
+// Update message font when language changes
+window.addEventListener('languageChanged', () => {
+  message.style.fontFamily = getCSSFontFamily(getCurrentLanguage());
+});
 
 // --- Clear Scene Function ---
 function clearScene() {
@@ -215,7 +222,9 @@ async function loadScene2() {
 
     physicsObjects.lockedDoor.onWin = () => {
       import('./GameWinScene.js').then(({ showWinScreen }) => {
-        showWinScreen();
+        import('./i18n/translations.js').then(({ t }) => {
+          showWinScreen(scene, t('game.win'));
+        });
       });
     };
   });

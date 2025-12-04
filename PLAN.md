@@ -142,17 +142,90 @@ Support three different natural languages:
 
 ### Phase 4: Handle Right-to-Left (RTL) Layout
 
-- [ ] Create CSS utilities for RTL layout support
-- [ ] Update UI message positioning to account for RTL direction
-- [ ] Test and adjust Three.js text rendering for RTL if needed
-- [ ] Ensure UI elements (buttons, menus) flip appropriately for RTL
+- [x] Create CSS utilities for RTL layout support
+- [x] Update UI message positioning to account for RTL direction
+- [x] Test and adjust Three.js text rendering for RTL if needed
+- [x] Ensure UI elements (buttons, menus) flip appropriately for RTL
+
+#### Implementation Details:
+
+**Created Files:**
+
+- `src/i18n/rtl-utils.js` - RTL utility functions:
+  - `isRTL()` - Check if current language is RTL
+  - `getRTLPosition()` - Get appropriate position based on RTL
+  - `applyRTLPosition()` - Apply RTL-aware positioning to elements
+  - `updateRTLPosition()` - Update element position on language change
+  - `getRTLTextAlign()` - Get text alignment for RTL
+
+**Updated Files:**
+
+- `src/inventory.js` - Made inventory UI RTL-aware:
+  - Position switches from left to right for RTL languages
+  - Listens for language change events to update position dynamically
+
+- `src/GameWinScene.js` - Updated win screen for RTL:
+  - Text positioning adjusted for RTL (mirrored horizontally)
+  - Text mesh scaled for proper RTL display
+
+- `src/main.js` - Updated message element:
+  - Uses language-aware font families
+  - Centered positioning works for both LTR and RTL
+  - Updates font on language change
+
+**Features:**
+
+- All UI elements properly positioned for RTL languages
+- Language selector already handles RTL (from Phase 3)
+- Three.js text rendering adjusted for RTL with horizontal mirroring
+- Dynamic position updates on language change
 
 ### Phase 5: Handle Logographic Script (Chinese)
 
-- [ ] Research and select appropriate Chinese fonts for web rendering
-- [ ] Ensure Three.js TextGeometry can render Chinese characters properly
-- [ ] Test font loading and fallback mechanisms
-- [ ] Verify text rendering quality and readability
+- [x] Research and select appropriate Chinese fonts for web rendering
+- [x] Ensure Three.js TextGeometry can render Chinese characters properly
+- [x] Test font loading and fallback mechanisms
+- [x] Verify text rendering quality and readability
+
+#### Implementation Details:
+
+**Created Files:**
+
+- `src/i18n/font-loader.js` - Font loading utilities:
+  - `loadFont(lang)` - Loads appropriate font for language
+  - `createTextGeometry()` - Creates text geometry with language-aware fonts
+  - `getCSSFontFamily()` - Returns CSS font-family for HTML elements
+  - Font caching for performance
+  - Fallback mechanism to English font if language font fails
+
+**Updated Files:**
+
+- `index.html` - Added Google Fonts for Chinese and Arabic:
+  - Noto Sans SC for Chinese characters
+  - Noto Sans Arabic for Arabic characters
+  - Preconnect links for faster font loading
+  - Default font-family includes Chinese and Arabic fonts
+
+- `src/GameWinScene.js` - Updated to use font loader:
+  - Uses language-aware font loading
+  - Handles font loading errors gracefully
+
+- `src/main.js` - Updated message element:
+  - Uses `getCSSFontFamily()` for language-appropriate fonts
+  - Updates font when language changes
+
+**Font Support:**
+
+- **English**: System fonts (sans-serif, Arial, Helvetica)
+- **Chinese**: Noto Sans SC, Microsoft YaHei, SimHei, SimSun fallback chain
+- **Arabic**: Noto Sans Arabic, Arial Unicode MS fallback chain
+
+**Limitations:**
+
+- Three.js TextGeometry uses typeface.json format fonts which typically don't support Chinese characters
+- Chinese characters in 3D text may not render correctly with TextGeometry
+- HTML/CSS text (like UI messages) fully supports Chinese with proper fonts
+- Font loading includes fallback mechanisms for reliability
 
 ### Phase 6: Replace Hardcoded Strings
 

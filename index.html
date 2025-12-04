@@ -3,8 +3,19 @@
   <head>
     <meta charset="utf-8">
     <title>My first three.js app</title>
+    <!-- Preconnect to Google Fonts for Chinese font support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Noto Sans SC for Chinese characters -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Noto Sans Arabic for Arabic characters -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
     <style>
-      body { margin: 0; }
+      body { 
+        margin: 0;
+        /* Default font stack with Chinese and Arabic support */
+        font-family: 'Noto Sans SC', 'Noto Sans Arabic', sans-serif, Arial, Helvetica;
+      }
     </style>
   </head>
   <body>

@@ -1,3 +1,5 @@
+import { isRTL, updateRTLPosition } from './i18n/rtl-utils.js';
+
 /**
  * Simple Inventory UI with 5 slots
  */
@@ -8,13 +10,28 @@ export class InventoryUI {
 
     // Create container
     this.container = document.createElement('div');
-    Object.assign(this.container.style, {
+    const ltrPosition = {
       position: 'absolute',
       top: '10px',
       left: '10px',
       display: 'flex',
       gap: '5px',
       zIndex: '1000',
+    };
+    const rtlPosition = {
+      position: 'absolute',
+      top: '10px',
+      right: '10px',
+      left: 'auto',
+      display: 'flex',
+      gap: '5px',
+      zIndex: '1000',
+    };
+    updateRTLPosition(this.container, ltrPosition, rtlPosition);
+
+    // Listen for language changes to update position
+    window.addEventListener('languageChanged', () => {
+      updateRTLPosition(this.container, ltrPosition, rtlPosition);
     });
 
     // Create slots
