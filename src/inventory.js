@@ -1,12 +1,13 @@
 import { isRTL, updateRTLPosition } from './i18n/rtl-utils.js';
 
 /**
- * Simple Inventory UI with 5 slots
+ * Simple Inventory UI with 5 slots + item tracking
  */
 export class InventoryUI {
   constructor() {
     this.slots = [];
     this.maxSlots = 5;
+    this.items = []; // store item types
 
     // Create container
     this.container = document.createElement('div');
@@ -57,6 +58,10 @@ export class InventoryUI {
     const emptySlot = this.slots.find(slot => !slot.hasChildNodes());
     if (!emptySlot) return; // No space left
 
+    // Store item
+    this.items.push(type);
+    console.log('[Inventory] addItem:', type);
+
     const icon = document.createElement('div');
     Object.assign(icon.style, {
       width: '30px',
@@ -65,7 +70,14 @@ export class InventoryUI {
       borderRadius: '4px',
     });
 
+    // Important: mark dataset so code can detect it
+    icon.dataset.item = type;
+
     emptySlot.appendChild(icon);
+  }
+
+  hasItem(type) {
+    return this.items.includes(type);
   }
 }
 

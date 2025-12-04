@@ -7,17 +7,18 @@ export class LockedDoor {
     this.world = world;
     this.scene = scene;
     this.player = player;
-    this.destination = destination.clone();
+    this.destination = destination ? destination.clone() : new THREE.Vector3(0, 0, 0);
 
     this.unlocked = false;
     this.fadedOut = false;
     this.fadeAmount = 1;
-    this.onWin = null; // 🚀 callback when the player wins
+    this.onWin = null;
 
-    // ----- 3D Mesh -----
+    // Purple door
     const geometry = new THREE.BoxGeometry(1, 2, 0.2);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x553300,
+    // Use an unlit material so the door remains visibly purple even without scene lighting
+    const material = new THREE.MeshBasicMaterial({
+      color: 0x8000ff, // purple
       transparent: true,
       opacity: 1,
     });
@@ -26,7 +27,7 @@ export class LockedDoor {
     this.mesh.position.copy(position);
     scene.add(this.mesh);
 
-    // ----- Sensor Body -----
+    // Rapier sensor collider
     const bodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(
       position.x,
       position.y,
@@ -35,7 +36,6 @@ export class LockedDoor {
     this.body = world.createRigidBody(bodyDesc);
 
     const colliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 1, 0.1).setSensor(true);
-
     this.collider = world.createCollider(colliderDesc, this.body);
   }
 
@@ -45,31 +45,76 @@ export class LockedDoor {
   }
 
   update() {
-    // (1) Door locked → touching → check for key
+    if (!this.world) return;
+
+    // If locked and touching, check for key and unlock
     if (!this.unlocked && this.isPlayerTouching()) {
       if (this.playerHasKey()) {
         this.unlocked = true;
+        console.log('[LockedDoor] unlocked: player had the key');
       }
     }
 
-    // (2) Fade out animation
+    // Fade-out when unlocked
     if (this.unlocked && !this.fadedOut) {
       this.fadeAmount -= 0.02;
       this.mesh.material.opacity = Math.max(0, this.fadeAmount);
 
       if (this.fadeAmount <= 0) {
-        this.fadedOut = true; // unlocked + invisible
+        this.fadedOut = true;
+        console.log('[LockedDoor] faded out; collider removed');
+        // remove collider so player can pass through
+        if (this.collider) {
+          this.world.removeCollider(this.collider, true);
+          this.collider = null;
+        }
       }
     }
 
-    // (3) After fading → walking into it makes you win
-    if (this.fadedOut && this.isPlayerTouching()) {
-      if (this.onWin) this.onWin(); // 🚀 CALL WIN FUNCTION
+    // After fade, if player overlaps, trigger win once
+    if (this.fadedOut) {
+      // We still use intersectionPair but if collider removed, fallback to distance check
+      let touching = false;
+      if (this.collider && this.player && this.player.collider) {
+        touching = this.world.intersectionPair(this.collider, this.player.collider);
+      } else if (this.player && this.player.body) {
+        // Rapier: use translation() (not .position)
+        const pos = this.player.body.translation();
+        const d = this.mesh.position;
+        const dx = pos.x - d.x;
+        const dy = pos.y - d.y;
+        const dz = pos.z - d.z;
+        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        touching = dist < 1.2;
+      }
+
+      if (touching && this.onWin) {
+        const cb = this.onWin;
+        this.onWin = null; // prevent double-call
+        console.log('[LockedDoor] triggering onWin callback');
+        cb();
+      }
     }
   }
 
   playerHasKey() {
-    // Adjust only if your key UI is different
-    return inventory.slots.some(slot => slot.firstChild && slot.firstChild.dataset.item === 'key');
+    // Prefer a hasItem API if inventory has it
+    if (inventory && typeof inventory.hasItem === 'function') {
+      return inventory.hasItem('key');
+    }
+
+    // Fallback: check DOM icons placed into inventory slots
+    if (inventory && Array.isArray(inventory.slots)) {
+      return inventory.slots.some(slot => {
+        const icon = slot.firstChild;
+        if (!icon) return false;
+        if (icon.dataset && icon.dataset.item) return icon.dataset.item === 'key';
+        // fallback by style color
+        const bg = icon.style && icon.style.backgroundColor;
+        return bg && (bg === 'gold' || bg === 'rgb(255, 215, 0)');
+      });
+    }
+
+    return false;
   }
 }

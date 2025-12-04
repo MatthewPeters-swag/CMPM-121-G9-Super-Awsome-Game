@@ -1,5 +1,7 @@
 import * as THREE from 'three';
-import { loadFont, getCSSFontFamily } from './i18n/font-loader.js';
+// We use a CanvasTexture fallback instead of FontLoader/TextGeometry
+// to avoid relying on an external font file that may 404 in production.
+import { getCSSFontFamily } from './i18n/font-loader.js';
 import { getCurrentLanguage } from './i18n/translations.js';
 import { isRTL } from './i18n/rtl-utils.js';
 
@@ -15,45 +17,67 @@ export async function showWinScreen(scene, winText) {
     scene.remove(obj);
   }
 
+  // Create big WIN text as a CanvasTexture so it always appears
+  // This approach works reliably for all languages including Chinese and Arabic
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  // Background transparent
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Get language-specific font for proper rendering of non-Latin scripts
   const lang = getCurrentLanguage();
+  const fontFamily = getCSSFontFamily(lang);
   const isRTLMode = isRTL();
 
-  // For Chinese characters, Three.js TextGeometry may not render properly
-  // because typeface.json fonts typically don't support Chinese
-  // We'll try to render with the font, but may need HTML overlay fallback
-  try {
-    const font = await loadFont(lang);
-    const textGeo = new THREE.TextGeometry(winText, {
-      font: font,
-      size: 1,
-      height: 0.2,
-    });
+  // Text styling
+  ctx.fillStyle = '#00ff00';
+  ctx.strokeStyle = '#003300';
+  ctx.lineWidth = 8;
+  const fontSize = 160;
+  ctx.font = `bold ${fontSize}px ${fontFamily}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
 
-    // Center the text geometry
-    textGeo.computeBoundingBox();
-    const textWidth = textGeo.boundingBox.max.x - textGeo.boundingBox.min.x;
-    const textHeight = textGeo.boundingBox.max.y - textGeo.boundingBox.min.y;
+  // Use translated text (defaults to 'YOU WIN!' if not provided)
+  const text = winText || 'YOU WIN!';
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
 
-    // Adjust position for RTL (mirror horizontally)
-    const xOffset = isRTLMode ? textWidth / 2 : -textWidth / 2;
-
-    const textMat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const textMesh = new THREE.Mesh(textGeo, textMat);
-    textMesh.position.set(xOffset, 1, 0);
-
-    // Mirror for RTL
-    if (isRTLMode) {
-      textMesh.scale.x = -1;
-    }
-
-    scene.add(textMesh);
-  } catch (error) {
-    console.warn(
-      'Failed to render 3D text, text may not display correctly for this language',
-      error
-    );
-    // Fallback: Could create HTML overlay here if needed
+  // For RTL languages, we can mirror the canvas if needed
+  if (isRTLMode) {
+    ctx.save();
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
   }
+
+  ctx.strokeText(text, cx, cy);
+  ctx.fillText(text, cx, cy);
+
+  if (isRTLMode) {
+    ctx.restore();
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+
+  // Use a Sprite so the texture is always flat and faces the camera (no 3D skew)
+  const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  // Improve visibility: render on top and disable depth test so it won't be occluded
+  spriteMat.depthTest = false;
+  const sprite = new THREE.Sprite(spriteMat);
+
+  // Size sprite based on canvas aspect ratio
+  const aspect = canvas.width / canvas.height;
+  const spriteHeight = 2.0; // world units tall
+  const spriteWidth = spriteHeight * aspect;
+  sprite.scale.set(spriteWidth, spriteHeight, 1);
+
+  // Place sprite slightly in front of background and centered
+  sprite.position.set(0, 1, 0);
+  sprite.renderOrder = 999;
+  scene.add(sprite);
 
   // Background panel
   const bgGeo = new THREE.PlaneGeometry(10, 6);
