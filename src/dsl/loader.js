@@ -93,16 +93,21 @@ function validateConfig(config) {
 
 /**
  * Loads and parses the physics configuration DSL file
- * Uses dynamic import for JSON files (Vite handles this at build time)
- * @param {string} filePath - Path to the JSON DSL file (relative to this module)
+ * Uses fetch to load JSON file at runtime (works with files outside src/)
+ * @param {string} filePath - Path to the JSON DSL file (relative to project root or absolute URL)
  * @returns {Promise<Object>} Parsed configuration object, or default config on error
  */
-export async function loadPhysicsConfig(filePath = '../../data/physics-config.json') {
+export async function loadPhysicsConfig(filePath = '/data/physics-config.json') {
   try {
-    // Dynamic import of JSON file (Vite handles JSON imports at build time)
-    // The path is relative to this file's location
-    const configModule = await import(filePath);
-    const config = configModule.default || configModule;
+    // Fetch JSON file (works for files in public/ or data/ directories)
+    // eslint-disable-next-line no-undef
+    const response = await fetch(filePath);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const config = await response.json();
 
     // Validate the loaded configuration
     if (validateConfig(config)) {

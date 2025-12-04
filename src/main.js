@@ -12,6 +12,7 @@ import { handleResize, checkBlockGoal, isGameOver, showMessage } from './utils.j
 import { initTranslations, t, getCurrentLanguage } from './i18n/translations.js';
 import { initLanguageSelector } from './i18n/languageSelector.js';
 import { getCSSFontFamily } from './i18n/font-loader.js';
+import { getPlayerConfig, getBlockConfig } from './dsl/physics-config.js';
 
 // --- Three.js Scene Setup ---
 const scene = new THREE.Scene();
@@ -129,11 +130,15 @@ async function initPhysics() {
 
 // --- Scene 1: Original Scene ---
 async function loadScene1() {
+  // Load physics configuration from DSL
+  const playerConfig = await getPlayerConfig();
+  const blockConfig = await getBlockConfig();
+
   // Create platform
   physicsObjects.platform = new Platform(world, scene);
 
-  // Create movable block
-  physicsObjects.block = new Block(world, scene, physicsObjects.platform.top);
+  // Create movable block with DSL-loaded config
+  physicsObjects.block = new Block(world, scene, physicsObjects.platform.top, blockConfig);
 
   // Create goal area
   physicsObjects.goal = new Goal(world, scene, physicsObjects.platform.top);
@@ -152,12 +157,8 @@ async function loadScene1() {
     }
   };
 
-  // Create player
-  physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, {
-    friction: 0.75,
-    minForce: 1.0,
-    maxForce: 3.0,
-  });
+  // Create player with DSL-loaded config
+  physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, playerConfig);
 
   // --- Camera ---
   camera.position.set(6, 10, 6);
@@ -166,6 +167,9 @@ async function loadScene1() {
 
 // --- Scene 2: New Scene with Different Layout ---
 async function loadScene2() {
+  // Load physics configuration from DSL
+  const playerConfig = await getPlayerConfig();
+
   // Create platform (same as scene 1)
   physicsObjects.platform = new Platform(world, scene);
 
@@ -190,12 +194,8 @@ async function loadScene2() {
     }
   };
 
-  // Create player in a different starting position
-  physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, {
-    friction: 0.75,
-    minForce: 1.0,
-    maxForce: 3.0,
-  });
+  // Create player in a different starting position with DSL-loaded config
+  physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, playerConfig);
 
   if (physicsObjects.player.body) {
     physicsObjects.player.body.setTranslation(

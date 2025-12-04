@@ -31,7 +31,7 @@ async function loadConfig() {
   }
 
   // Start loading configuration
-  configLoadPromise = loadPhysicsConfig('../../data/physics-config.json')
+  configLoadPromise = loadPhysicsConfig('/data/physics-config.json')
     .then(config => {
       cachedConfig = config;
       configLoadPromise = null;

@@ -522,19 +522,59 @@ Use an external DSL to define important design details in the game, with tool su
 
 ### Phase 5: Refactor Game Code to Use DSL
 
-- [ ] Import DSL loader in `src/main.js`
-- [ ] Update `loadScene1()` to load player config from DSL:
+- [x] Import DSL loader in `src/main.js`
+- [x] Update `loadScene1()` to load player config from DSL:
   - Replace hardcoded `{ friction: 0.75, minForce: 1.0, maxForce: 3.0 }` with DSL-loaded config
   - Update `Player` constructor call to include `linearDamping` and `angularDamping` from DSL
-- [ ] Update `loadScene2()` to load player config from DSL:
+- [x] Update `loadScene2()` to load player config from DSL:
   - Replace hardcoded `{ friction: 0.75, minForce: 1.0, maxForce: 3.0 }` with DSL-loaded config
   - Update `Player` constructor call to include `linearDamping` and `angularDamping` from DSL
-- [ ] Update `src/player.js` to accept `linearDamping` and `angularDamping` in config:
+- [x] Update `src/player.js` to accept `linearDamping` and `angularDamping` in config:
   - Extract `linearDamping` and `angularDamping` from config with defaults (0.3 and 0.8)
   - Use these values in `setLinearDamping()` and `setAngularDamping()` calls instead of hardcoded values
-- [ ] Update `loadScene1()` to load block config from DSL:
+- [x] Update `loadScene1()` to load block config from DSL:
   - Replace hardcoded block constructor defaults with DSL-loaded config
-- [ ] Ensure backward compatibility by providing defaults if DSL loading fails
+- [x] Ensure backward compatibility by providing defaults if DSL loading fails
+
+#### Implementation Details:
+
+**Updated Files:**
+
+- `src/main.js`:
+  - Added import for `getPlayerConfig` and `getBlockConfig` from `./dsl/physics-config.js`
+  - Updated `loadScene1()` to:
+    - Load player config from DSL using `await getPlayerConfig()`
+    - Load block config from DSL using `await getBlockConfig()`
+    - Pass complete player config (including linearDamping and angularDamping) to Player constructor
+    - Pass block config to Block constructor
+  - Updated `loadScene2()` to:
+    - Load player config from DSL using `await getPlayerConfig()`
+    - Pass complete player config to Player constructor
+  - All hardcoded physics values replaced with DSL-loaded values
+
+- `src/player.js`:
+  - Updated constructor to accept `linearDamping` and `angularDamping` in config parameter
+  - Added JSDoc documentation for new config parameters
+  - Extracted `linearDamping` and `angularDamping` from config with defaults (0.3 and 0.8)
+  - Replaced hardcoded values (0.3 and 0.8) with config values in `setLinearDamping()` and `setAngularDamping()` calls
+  - Maintains backward compatibility with default values if not provided
+
+**Key Changes:**
+
+- **Player Configuration**: Now loads all 5 properties from DSL (friction, minForce, maxForce, linearDamping, angularDamping)
+- **Block Configuration**: Now loads all 4 properties from DSL (linearDamping, angularDamping, friction, density)
+- **Backward Compatibility**: Default values ensure game works even if DSL loading fails
+- **Async Loading**: Configuration is loaded asynchronously before creating physics objects
+- **No Hardcoded Values**: All physics properties now come from DSL file
+
+**Benefits:**
+
+- Physics properties can be modified without changing code
+- Easy to experiment with different physics values
+- Configuration is centralized in one JSON file
+- Validation ensures invalid values don't break the game
+
+**Note:** The `data/` directory was moved to `public/data/` so Vite can serve the JSON file at runtime. The loader uses `fetch()` to load the configuration from `/data/physics-config.json`.
 
 ### Phase 6: Create Tool Support (Syntax Highlighting)
 

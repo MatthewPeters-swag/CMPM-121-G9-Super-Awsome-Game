@@ -14,9 +14,17 @@ export class Player {
    * @param {number} config.friction - The friction coefficient for the player (default: 0.75)
    * @param {number} config.minForce - Base force multiplier for movement (default: 1.0)
    * @param {number} config.maxForce - Maximum force cap for far clicks (default: 3.0)
+   * @param {number} config.linearDamping - Linear damping coefficient (default: 0.3)
+   * @param {number} config.angularDamping - Angular damping coefficient (default: 0.8)
    */
   constructor(world, scene, platformTop, config = {}) {
-    const { friction = 0.75, minForce = 1.0, maxForce = 3.0 } = config;
+    const {
+      friction = 0.75,
+      minForce = 1.0,
+      maxForce = 3.0,
+      linearDamping = 0.3,
+      angularDamping = 0.8,
+    } = config;
 
     // Store movement configuration
     this.minForce = minForce;
@@ -31,8 +39,8 @@ export class Player {
 
     // Create player physics body
     const playerBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-      .setLinearDamping(0.3) // Reduced damping to maintain momentum better
-      .setAngularDamping(0.8)
+      .setLinearDamping(linearDamping) // Reduced damping to maintain momentum better
+      .setAngularDamping(angularDamping)
       .setTranslation(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z);
     this.body = world.createRigidBody(playerBodyDesc);
     const playerColliderDesc = RAPIER.ColliderDesc.cuboid(0.3, 0.3, 0.3).setFriction(friction);
