@@ -1,8 +1,16 @@
 import * as THREE from 'three';
 // We use a CanvasTexture fallback instead of FontLoader/TextGeometry
 // to avoid relying on an external font file that may 404 in production.
+import { getCSSFontFamily } from './i18n/font-loader.js';
+import { getCurrentLanguage, t } from './i18n/translations.js';
+import { isRTL } from './i18n/rtl-utils.js';
 
-export function showWinScreen(scene) {
+/**
+ * Shows the win screen with translated text
+ * @param {THREE.Scene} scene - Three.js scene
+ * @param {string} winText - Text to display (will be translated)
+ */
+export async function showWinScreen(scene, winText) {
   // Clear old objects
   while (scene.children.length > 0) {
     const obj = scene.children[0];
@@ -10,25 +18,46 @@ export function showWinScreen(scene) {
   }
 
   // Create big WIN text as a CanvasTexture so it always appears
+  // This approach works reliably for all languages including Chinese and Arabic
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
   canvas.height = 512;
   const ctx = canvas.getContext('2d');
   // Background transparent
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Get language-specific font for proper rendering of non-Latin scripts
+  const lang = getCurrentLanguage();
+  const fontFamily = getCSSFontFamily(lang);
+  const isRTLMode = isRTL();
+
   // Text styling
   ctx.fillStyle = '#00ff00';
   ctx.strokeStyle = '#003300';
   ctx.lineWidth = 8;
   const fontSize = 160;
-  ctx.font = `bold ${fontSize}px sans-serif`;
+  ctx.font = `bold ${fontSize}px ${fontFamily}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const text = 'YOU WIN!';
+
+  // Use translated text (defaults to translation if not provided)
+  const text = winText || t('game.win');
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
+
+  // For RTL languages, we can mirror the canvas if needed
+  if (isRTLMode) {
+    ctx.save();
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+  }
+
   ctx.strokeText(text, cx, cy);
   ctx.fillText(text, cx, cy);
+
+  if (isRTLMode) {
+    ctx.restore();
+  }
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;

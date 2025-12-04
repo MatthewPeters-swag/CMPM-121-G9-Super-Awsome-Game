@@ -1,0 +1,16 @@
+{
+  "player": {
+    "friction": 0.85,
+    "minForce": 2.0,
+    "maxForce": 5.0,
+    "linearDamping": 0.4,
+    "angularDamping": 0.9
+  },
+  "block": {
+    "linearDamping": 0.4,
+    "angularDamping": 0.5,
+    "friction": 0.8,
+    "density": 1.5
+  }
+}
+

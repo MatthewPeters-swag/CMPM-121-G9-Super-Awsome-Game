@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/physics-config.schema.json",
+  "title": "Physics Configuration Schema",
+  "description": "Schema for game physics configuration DSL",
+  "type": "object",
+  "required": ["player", "block"],
+  "properties": {
+    "player": {
+      "type": "object",
+      "description": "Player physics configuration",
+      "required": ["friction", "minForce", "maxForce", "linearDamping", "angularDamping"],
+      "properties": {
+        "friction": {
+          "type": "number",
+          "description": "Friction coefficient between player and surfaces. Higher values make the player slide less.",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.75,
+          "examples": [0.75, 0.5, 1.0]
+        },
+        "minForce": {
+          "type": "number",
+          "description": "Base force multiplier for player movement. Scales with click distance.",
+          "exclusiveMinimum": 0,
+          "default": 1.0,
+          "examples": [1.0, 0.5, 2.0]
+        },
+        "maxForce": {
+          "type": "number",
+          "description": "Maximum force cap for far clicks. Prevents excessive force on distant clicks. Must be >= minForce.",
+          "exclusiveMinimum": 0,
+          "default": 3.0,
+          "examples": [3.0, 2.0, 5.0]
+        },
+        "linearDamping": {
+          "type": "number",
+          "description": "Linear damping coefficient. Reduces linear velocity over time. Higher values = more resistance to movement.",
+          "minimum": 0,
+          "default": 0.3,
+          "examples": [0.3, 0.0, 1.0]
+        },
+        "angularDamping": {
+          "type": "number",
+          "description": "Angular damping coefficient. Reduces rotational velocity over time. Higher values = less spinning.",
+          "minimum": 0,
+          "default": 0.8,
+          "examples": [0.8, 0.0, 1.0]
+        }
+      },
+      "additionalProperties": false
+    },
+    "block": {
+      "type": "object",
+      "description": "Block physics configuration",
+      "required": ["linearDamping", "angularDamping", "friction", "density"],
+      "properties": {
+        "linearDamping": {
+          "type": "number",
+          "description": "Linear damping coefficient. Reduces linear velocity over time.",
+          "minimum": 0,
+          "default": 0.2,
+          "examples": [0.2, 0.0, 0.5]
+        },
+        "angularDamping": {
+          "type": "number",
+          "description": "Angular damping coefficient. Reduces rotational velocity over time.",
+          "minimum": 0,
+          "default": 0.3,
+          "examples": [0.3, 0.0, 0.5]
+        },
+        "friction": {
+          "type": "number",
+          "description": "Friction coefficient between block and surfaces.",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.3,
+          "examples": [0.3, 0.0, 1.0]
+        },
+        "density": {
+          "type": "number",
+          "description": "Density of the block. Affects mass and inertia. Higher density makes blocks harder to push but more stable.",
+          "exclusiveMinimum": 0,
+          "default": 0.5,
+          "examples": [0.5, 0.1, 2.0]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
+

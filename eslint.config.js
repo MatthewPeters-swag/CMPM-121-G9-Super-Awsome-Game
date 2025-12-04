@@ -14,6 +14,9 @@ export default [
       globals: {
         window: 'readonly',
         document: 'readonly',
+        navigator: 'readonly',
+        localStorage: 'readonly',
+        CustomEvent: 'readonly',
         console: 'readonly',
         setTimeout: 'readonly',
         THREE: 'readonly',

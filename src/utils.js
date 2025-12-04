@@ -2,6 +2,8 @@
  * Utility functions for game logic and UI management
  */
 
+import { t } from './i18n/translations.js';
+
 /**
  * Handles window resize events
  * @param {THREE.PerspectiveCamera} camera - The Three.js camera
@@ -48,7 +50,7 @@ export function isGameOver(physicsObjects, messageElement) {
     physicsObjects.block?.isOffPlatform(platformHalfSize) ||
     physicsObjects.player?.isOffPlatform(platformHalfSize)
   ) {
-    showMessage(messageElement, 'You Lose!');
+    showMessage(messageElement, t('game.lose'));
     return true;
   }
 

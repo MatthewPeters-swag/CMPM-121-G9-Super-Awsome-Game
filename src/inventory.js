@@ -1,3 +1,5 @@
+import { isRTL, updateRTLPosition } from './i18n/rtl-utils.js';
+
 /**
  * Simple Inventory UI with 5 slots + item tracking
  */
@@ -9,13 +11,30 @@ export class InventoryUI {
 
     // Create container
     this.container = document.createElement('div');
-    Object.assign(this.container.style, {
+    this.ltrPosition = {
       position: 'absolute',
       top: '10px',
       left: '10px',
       display: 'flex',
       gap: '5px',
       zIndex: '1000',
+    };
+    this.rtlPosition = {
+      position: 'absolute',
+      top: '10px',
+      right: '10px',
+      left: 'auto',
+      display: 'flex',
+      gap: '5px',
+      zIndex: '1000',
+    };
+
+    // Update position based on current language (will be called after i18n init)
+    this.updatePosition();
+
+    // Listen for language changes to update position
+    window.addEventListener('languageChanged', () => {
+      this.updatePosition();
     });
 
     // Create slots
@@ -35,6 +54,13 @@ export class InventoryUI {
     }
 
     document.body.appendChild(this.container);
+  }
+
+  /**
+   * Updates the inventory position based on current language/RTL state
+   */
+  updatePosition() {
+    updateRTLPosition(this.container, this.ltrPosition, this.rtlPosition);
   }
 
   addItem(type) {

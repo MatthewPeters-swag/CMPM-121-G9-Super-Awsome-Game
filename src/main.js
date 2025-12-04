@@ -9,6 +9,10 @@ import { Key } from './key.js';
 import { Teleporter } from './teleporter.js';
 import { inventory } from './inventory.js';
 import { handleResize, checkBlockGoal, isGameOver, showMessage } from './utils.js';
+import { initTranslations, t, getCurrentLanguage } from './i18n/translations.js';
+import { initLanguageSelector } from './i18n/languageSelector.js';
+import { getCSSFontFamily } from './i18n/font-loader.js';
+import { getPlayerConfig, getBlockConfig } from './dsl/physics-config.js';
 
 // --- Three.js Scene Setup ---
 const scene = new THREE.Scene();
@@ -47,13 +51,19 @@ Object.assign(message.style, {
   padding: '10px 20px',
   background: 'rgba(0,0,0,0.6)',
   color: 'white',
-  fontFamily: 'sans-serif',
+  fontFamily: getCSSFontFamily(getCurrentLanguage()),
   fontSize: '20px',
   display: 'none',
   borderRadius: '6px',
   zIndex: '1000',
+  textAlign: 'center', // Center text for both LTR and RTL
 });
 document.body.appendChild(message);
+
+// Update message font when language changes
+window.addEventListener('languageChanged', () => {
+  message.style.fontFamily = getCSSFontFamily(getCurrentLanguage());
+});
 
 // --- Clear Scene Function ---
 function clearScene() {
@@ -101,7 +111,7 @@ async function loadScene(sceneNumber) {
     await loadScene2();
   }
 
-  showMessage(message, `Scene ${sceneNumber} loaded!`);
+  showMessage(message, t('scene.loaded', { sceneNumber }));
   setTimeout(() => {
     message.style.display = 'none';
   }, 2000);
@@ -120,11 +130,15 @@ async function initPhysics() {
 
 // --- Scene 1: Original Scene ---
 async function loadScene1() {
+  // Load physics configuration from DSL
+  const playerConfig = await getPlayerConfig();
+  const blockConfig = await getBlockConfig();
+
   // Create platform
   physicsObjects.platform = new Platform(world, scene);
 
-  // Create movable block
-  physicsObjects.block = new Block(world, scene, physicsObjects.platform.top);
+  // Create movable block with DSL-loaded config
+  physicsObjects.block = new Block(world, scene, physicsObjects.platform.top, blockConfig);
 
   // Create goal area
   physicsObjects.goal = new Goal(world, scene, physicsObjects.platform.top);
@@ -135,7 +149,7 @@ async function loadScene1() {
   // Set up teleporter event handler to load scene 2
   physicsObjects.teleporter.onPlayerEnter = () => {
     if (!gameOver) {
-      showMessage(message, 'Teleporting to Scene 2...');
+      showMessage(message, t('teleporter.scene2'));
       gameOver = true; // Prevent further actions during transition
       setTimeout(() => {
         loadScene(2);
@@ -143,12 +157,8 @@ async function loadScene1() {
     }
   };
 
-  // Create player
-  physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, {
-    friction: 0.75,
-    minForce: 1.0,
-    maxForce: 3.0,
-  });
+  // Create player with DSL-loaded config
+  physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, playerConfig);
 
   // --- Camera ---
   camera.position.set(6, 10, 6);
@@ -157,6 +167,9 @@ async function loadScene1() {
 
 // --- Scene 2: New Scene with Different Layout ---
 async function loadScene2() {
+  // Load physics configuration from DSL
+  const playerConfig = await getPlayerConfig();
+
   // Create platform (same as scene 1)
   physicsObjects.platform = new Platform(world, scene);
 
@@ -173,7 +186,7 @@ async function loadScene2() {
   // Set up teleporter event handler to go back to scene 1
   physicsObjects.teleporter.onPlayerEnter = () => {
     if (!gameOver) {
-      showMessage(message, 'Teleporting back to Scene 1...');
+      showMessage(message, t('teleporter.scene1'));
       gameOver = true;
       setTimeout(() => {
         loadScene(1);
@@ -181,12 +194,8 @@ async function loadScene2() {
     }
   };
 
-  // Create player in a different starting position
-  physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, {
-    friction: 0.75,
-    minForce: 1.0,
-    maxForce: 3.0,
-  });
+  // Create player in a different starting position with DSL-loaded config
+  physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, playerConfig);
 
   if (physicsObjects.player.body) {
     physicsObjects.player.body.setTranslation(
@@ -223,7 +232,9 @@ async function loadScene2() {
 
     physicsObjects.lockedDoor.onWin = () => {
       import('./GameWinScene.js').then(({ showWinScreen }) => {
-        showWinScreen(scene);
+        import('./i18n/translations.js').then(({ t }) => {
+          showWinScreen(scene, t('game.win'));
+        });
       });
     };
   });
@@ -256,6 +267,26 @@ document.body.appendChild(phaserContainer);
 
 // Render initial empty scene
 renderer.render(scene, camera);
+
+// Initialize i18n system
+(async () => {
+  await initTranslations();
+  initLanguageSelector();
+
+  // Update page title with translated text
+  document.title = t('page.title');
+
+  // Update inventory position after i18n is initialized
+  // (inventory is created as singleton before i18n init, so we need to update it now)
+  if (inventory && typeof inventory.updatePosition === 'function') {
+    inventory.updatePosition();
+  }
+
+  // Listen for language changes to update page title
+  window.addEventListener('languageChanged', () => {
+    document.title = t('page.title');
+  });
+})();
 
 const game = new Phaser.Game(config);
 
