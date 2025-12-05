@@ -95,15 +95,22 @@ window.addEventListener('languageChanged', () => {
 
 // --- Clear Scene Function ---
 function clearScene() {
+  // Clear all Three.js scene objects (including GameLoseScene sprites)
+  while (scene.children.length > 0) {
+    const obj = scene.children[0];
+    scene.remove(obj);
+    if (obj.geometry) obj.geometry.dispose();
+    if (obj.material) {
+      if (obj.material.map) obj.material.map.dispose();
+      obj.material.dispose();
+    }
+  }
+
+  // Clear physics objects
   if (world) {
     Object.values(physicsObjects).forEach(obj => {
       if (obj && obj.collider) world.removeCollider(obj.collider, true);
       if (obj && obj.body) world.removeRigidBody(obj.body);
-      if (obj && obj.mesh) {
-        scene.remove(obj.mesh);
-        if (obj.mesh.geometry) obj.mesh.geometry.dispose();
-        if (obj.mesh.material) obj.mesh.material.dispose();
-      }
     });
   }
 
@@ -326,7 +333,17 @@ function update(_time, _delta) {
   // Show lose screen when game over is triggered
   if (gameOver && !wasGameOver) {
     import('./GameLoseScene.js').then(({ showLoseScreen }) => {
-      showLoseScreen(scene, t('game.lose'));
+      showLoseScreen(
+        scene,
+        t('game.lose'),
+        () => {
+          // Reset game state and reload scene 1
+          gameOver = false;
+          keySpawned = false;
+          loadScene(1);
+        },
+        camera
+      );
     });
   }
 

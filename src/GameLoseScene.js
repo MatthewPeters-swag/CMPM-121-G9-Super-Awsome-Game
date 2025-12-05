@@ -9,8 +9,10 @@ import { isRTL } from './i18n/rtl-utils.js';
  * Shows the lose screen with translated text
  * @param {THREE.Scene} scene - Three.js scene
  * @param {string} loseText - Text to display (will be translated)
+ * @param {Function} onRetry - Callback function to execute when retry button is clicked
+ * @param {THREE.Camera} camera - Camera for raycasting
  */
-export async function showLoseScreen(scene, loseText) {
+export async function showLoseScreen(scene, loseText, onRetry, camera) {
   // Clear old objects
   while (scene.children.length > 0) {
     const obj = scene.children[0];
@@ -85,4 +87,74 @@ export async function showLoseScreen(scene, loseText) {
   const bg = new THREE.Mesh(bgGeo, bgMat);
   bg.position.set(0, 0, -1);
   scene.add(bg);
+
+  // Create retry button
+  const buttonCanvas = document.createElement('canvas');
+  buttonCanvas.width = 512;
+  buttonCanvas.height = 128;
+  const btnCtx = buttonCanvas.getContext('2d');
+
+  // Button background
+  btnCtx.fillStyle = '#444444';
+  btnCtx.fillRect(0, 0, buttonCanvas.width, buttonCanvas.height);
+
+  // Button border
+  btnCtx.strokeStyle = '#ffffff';
+  btnCtx.lineWidth = 4;
+  btnCtx.strokeRect(2, 2, buttonCanvas.width - 4, buttonCanvas.height - 4);
+
+  // Button text
+  btnCtx.fillStyle = '#ffffff';
+  const btnFontSize = 48;
+  btnCtx.font = `bold ${btnFontSize}px ${fontFamily}`;
+  btnCtx.textAlign = 'center';
+  btnCtx.textBaseline = 'middle';
+
+  if (isRTLMode) {
+    btnCtx.save();
+    btnCtx.translate(buttonCanvas.width, 0);
+    btnCtx.scale(-1, 1);
+  }
+
+  btnCtx.fillText('RETRY', buttonCanvas.width / 2, buttonCanvas.height / 2);
+
+  if (isRTLMode) {
+    btnCtx.restore();
+  }
+
+  const btnTex = new THREE.CanvasTexture(buttonCanvas);
+  btnTex.needsUpdate = true;
+
+  const btnSpriteMat = new THREE.SpriteMaterial({ map: btnTex, transparent: true });
+  btnSpriteMat.depthTest = false;
+  const btnSprite = new THREE.Sprite(btnSpriteMat);
+
+  const btnAspect = buttonCanvas.width / buttonCanvas.height;
+  const btnHeight = 0.8;
+  const btnWidth = btnHeight * btnAspect;
+  btnSprite.scale.set(btnWidth, btnHeight, 1);
+  btnSprite.position.set(0, -1.2, 0);
+  btnSprite.renderOrder = 1000;
+  btnSprite.userData.isRetryButton = true;
+  scene.add(btnSprite);
+
+  // Add click handler for retry button
+  if (onRetry && camera) {
+    const handleClick = event => {
+      const mouse = new THREE.Vector2(
+        (event.clientX / window.innerWidth) * 2 - 1,
+        -(event.clientY / window.innerHeight) * 2 + 1
+      );
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, camera);
+
+      const intersects = raycaster.intersectObject(btnSprite);
+      if (intersects.length > 0) {
+        window.removeEventListener('click', handleClick);
+        onRetry();
+      }
+    };
+
+    window.addEventListener('click', handleClick);
+  }
 }
