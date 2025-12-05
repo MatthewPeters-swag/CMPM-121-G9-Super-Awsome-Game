@@ -320,7 +320,15 @@ function update(_time, _delta) {
   if (physicsObjects.teleporter?.isPlayerTouching(world, physicsObjects.player))
     physicsObjects.teleporter.trigger();
 
+  const wasGameOver = gameOver;
   gameOver = isGameOver(physicsObjects, message);
+
+  // Show lose screen when game over is triggered
+  if (gameOver && !wasGameOver) {
+    import('./GameLoseScene.js').then(({ showLoseScreen }) => {
+      showLoseScreen(scene, t('game.lose'));
+    });
+  }
 
   renderer.render(scene, camera);
 }
