@@ -13,6 +13,7 @@ import { initTranslations, t, getCurrentLanguage } from './i18n/translations.js'
 import { initLanguageSelector } from './i18n/languageSelector.js';
 import { getCSSFontFamily } from './i18n/font-loader.js';
 import { getPlayerConfig, getBlockConfig } from './dsl/physics-config.js';
+import { updateRTLPosition } from './i18n/rtl-utils.js';
 
 // --- Three.js Scene Setup ---
 const scene = new THREE.Scene();
@@ -40,6 +41,7 @@ let physicsObjects = {
 let gameOver = false;
 let keySpawned = false; // Track if the key has already been spawned
 let currentScene = 1;
+let moveCount = 0; // Track number of moves
 
 // --- Save System ---
 function saveGame() {
@@ -49,6 +51,7 @@ function saveGame() {
     player: physicsObjects.player.getSaveData(),
     block: physicsObjects.block ? physicsObjects.block.getSaveData() : null,
     key: physicsObjects.key ? physicsObjects.key.getSaveData() : { pickedUp: true },
+    moveCount: moveCount,
   };
   localStorage.setItem('myGameSave', JSON.stringify(saveData));
 }
@@ -60,6 +63,8 @@ function loadGame() {
   if (!data) return;
 
   currentScene = data.scene || 1;
+  moveCount = data.moveCount || 0;
+  updateMoveCounter();
   loadScene(currentScene).then(() => {
     if (physicsObjects.player) physicsObjects.player.loadFromData(data.player);
     if (physicsObjects.block && data.block) physicsObjects.block.loadFromData(data.block);
@@ -88,6 +93,59 @@ Object.assign(message.style, {
   textAlign: 'center',
 });
 document.body.appendChild(message);
+
+// --- Move Counter UI ---
+const moveCounter = document.createElement('div');
+const moveCounterLTRPosition = {
+  position: 'absolute',
+  top: '70px',
+  left: '10px',
+  padding: '10px 15px',
+  background: 'rgba(0,0,0,0.6)',
+  color: 'white',
+  fontFamily: getCSSFontFamily(getCurrentLanguage()),
+  fontSize: '18px',
+  borderRadius: '6px',
+  zIndex: '1000',
+  border: '2px solid white',
+};
+const moveCounterRTLPosition = {
+  position: 'absolute',
+  top: '70px',
+  right: '10px',
+  left: 'auto',
+  padding: '10px 15px',
+  background: 'rgba(0,0,0,0.6)',
+  color: 'white',
+  fontFamily: getCSSFontFamily(getCurrentLanguage()),
+  fontSize: '18px',
+  borderRadius: '6px',
+  zIndex: '1000',
+  border: '2px solid white',
+};
+
+function updateMoveCounter() {
+  moveCounter.textContent = `${t('ui.moves')}:  ${moveCount}`;
+  moveCounter.style.fontFamily = getCSSFontFamily(getCurrentLanguage());
+  updateRTLPosition(moveCounter, moveCounterLTRPosition, moveCounterRTLPosition);
+}
+
+function incrementMoveCount() {
+  moveCount++;
+  updateMoveCounter();
+}
+
+// Make functions globally accessible
+window.incrementMoveCount = incrementMoveCount;
+
+// Initial setup
+updateRTLPosition(moveCounter, moveCounterLTRPosition, moveCounterRTLPosition);
+moveCounter.textContent = `${t('ui.moves')}:  0`;
+document.body.appendChild(moveCounter);
+
+window.addEventListener('languageChanged', () => {
+  updateMoveCounter();
+});
 
 window.addEventListener('languageChanged', () => {
   message.style.fontFamily = getCSSFontFamily(getCurrentLanguage());
@@ -249,6 +307,7 @@ renderer.render(scene, camera);
   initLanguageSelector();
   document.title = t('page.title');
   inventory.updatePosition?.();
+  updateMoveCounter(); // Update move counter with translations
   window.addEventListener('languageChanged', () => (document.title = t('page.title')));
 })();
 
@@ -340,6 +399,8 @@ function update(_time, _delta) {
           // Reset game state and reload scene 1
           gameOver = false;
           keySpawned = false;
+          moveCount = 0;
+          updateMoveCounter();
           loadScene(1);
         },
         camera

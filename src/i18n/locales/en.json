@@ -14,7 +14,8 @@
     "title": "My first three.js app"
   },
   "ui": {
-    "language": "Language"
+    "language": "Language",
+    "moves": "Moves"
   }
 }
 

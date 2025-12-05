@@ -14,7 +14,8 @@
     "title": "تطبيقي الأول بـ three.js"
   },
   "ui": {
-    "language": "اللغة"
+    "language": "اللغة",
+    "moves": "الحركات"
   }
 }
 
