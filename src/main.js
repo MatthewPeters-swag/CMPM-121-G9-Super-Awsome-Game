@@ -276,7 +276,9 @@ async function loadScene2() {
 
     physicsObjects.lockedDoor.onWin = () => {
       import('./GameWinScene.js').then(({ showWinScreen }) => {
-        import('./i18n/translations.js').then(({ t }) => showWinScreen(scene, t('game.win')));
+        import('./i18n/translations.js').then(({ t }) =>
+          showWinScreen(scene, t('game.win'), moveCount)
+        );
       });
     };
   });

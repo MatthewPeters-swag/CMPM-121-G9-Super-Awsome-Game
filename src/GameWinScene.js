@@ -9,8 +9,9 @@ import { isRTL } from './i18n/rtl-utils.js';
  * Shows the win screen with translated text
  * @param {THREE.Scene} scene - Three.js scene
  * @param {string} winText - Text to display (will be translated)
+ * @param {number} moveCount - Number of moves taken to complete the game
  */
-export async function showWinScreen(scene, winText) {
+export async function showWinScreen(scene, winText, moveCount = 0) {
   // Clear old objects
   while (scene.children.length > 0) {
     const obj = scene.children[0];
@@ -85,4 +86,53 @@ export async function showWinScreen(scene, winText) {
   const bg = new THREE.Mesh(bgGeo, bgMat);
   bg.position.set(0, 0, -1);
   scene.add(bg);
+
+  // Create move count text
+  const moveCanvas = document.createElement('canvas');
+  moveCanvas.width = 1024;
+  moveCanvas.height = 256;
+  const moveCtx = moveCanvas.getContext('2d');
+  moveCtx.clearRect(0, 0, moveCanvas.width, moveCanvas.height);
+
+  // Move count styling
+  moveCtx.fillStyle = '#ffffff';
+  moveCtx.strokeStyle = '#000000';
+  moveCtx.lineWidth = 6;
+  const moveFontSize = 80;
+  moveCtx.font = `bold ${moveFontSize}px ${fontFamily}`;
+  moveCtx.textAlign = 'center';
+  moveCtx.textBaseline = 'middle';
+
+  // Use translated completion message
+  const moveText = t('game.completedIn', { moves: moveCount });
+  const moveCx = moveCanvas.width / 2;
+  const moveCy = moveCanvas.height / 2;
+
+  if (isRTLMode) {
+    moveCtx.save();
+    moveCtx.translate(moveCanvas.width, 0);
+    moveCtx.scale(-1, 1);
+  }
+
+  moveCtx.strokeText(moveText, moveCx, moveCy);
+  moveCtx.fillText(moveText, moveCx, moveCy);
+
+  if (isRTLMode) {
+    moveCtx.restore();
+  }
+
+  const moveTex = new THREE.CanvasTexture(moveCanvas);
+  moveTex.needsUpdate = true;
+
+  const moveSpriteMat = new THREE.SpriteMaterial({ map: moveTex, transparent: true });
+  moveSpriteMat.depthTest = false;
+  const moveSprite = new THREE.Sprite(moveSpriteMat);
+
+  const moveAspect = moveCanvas.width / moveCanvas.height;
+  const moveSpriteHeight = 1.0;
+  const moveSpriteWidth = moveSpriteHeight * moveAspect;
+  moveSprite.scale.set(moveSpriteWidth, moveSpriteHeight, 1);
+  moveSprite.position.set(0, -0.5, 0);
+  moveSprite.renderOrder = 999;
+  scene.add(moveSprite);
 }

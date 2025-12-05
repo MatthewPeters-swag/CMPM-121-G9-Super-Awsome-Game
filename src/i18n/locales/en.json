@@ -8,7 +8,8 @@
   },
   "game": {
     "lose": "You Lose!",
-    "win": "YOU WIN!"
+    "win": "YOU WIN!",
+    "completedIn": "Completed in {{moves}} moves!"
   },
   "page": {
     "title": "My first three.js app"

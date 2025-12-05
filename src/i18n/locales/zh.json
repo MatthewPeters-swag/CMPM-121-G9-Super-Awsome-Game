@@ -8,7 +8,8 @@
   },
   "game": {
     "lose": "你输了！",
-    "win": "你赢了！"
+    "win": "你赢了！",
+    "completedIn": "用 {{moves}} 步完成！"
   },
   "page": {
     "title": "我的第一个 three.js 应用"
