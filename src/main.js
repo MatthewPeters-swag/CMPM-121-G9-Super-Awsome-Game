@@ -39,7 +39,36 @@ let physicsObjects = {
 // --- Game State ---
 let gameOver = false;
 let keySpawned = false; // Track if the key has already been spawned
-const requestAnimationFrame = window.requestAnimationFrame.bind(window);
+let currentScene = 1;
+
+// --- Save System ---
+function saveGame() {
+  if (!physicsObjects.player) return;
+  const saveData = {
+    scene: currentScene,
+    player: physicsObjects.player.getSaveData(),
+    block: physicsObjects.block ? physicsObjects.block.getSaveData() : null,
+    key: physicsObjects.key ? physicsObjects.key.getSaveData() : { pickedUp: true },
+  };
+  localStorage.setItem('myGameSave', JSON.stringify(saveData));
+}
+
+function loadGame() {
+  const dataStr = localStorage.getItem('myGameSave');
+  if (!dataStr) return;
+  const data = JSON.parse(dataStr);
+  if (!data) return;
+
+  currentScene = data.scene || 1;
+  loadScene(currentScene).then(() => {
+    if (physicsObjects.player) physicsObjects.player.loadFromData(data.player);
+    if (physicsObjects.block && data.block) physicsObjects.block.loadFromData(data.block);
+    if (physicsObjects.key && data.key) physicsObjects.key.loadFromData(data.key);
+  });
+}
+
+// Make saveGame globally accessible for auto-save
+window.saveGame = saveGame;
 
 // --- UI Message ---
 const message = document.createElement('div');
@@ -56,28 +85,20 @@ Object.assign(message.style, {
   display: 'none',
   borderRadius: '6px',
   zIndex: '1000',
-  textAlign: 'center', // Center text for both LTR and RTL
+  textAlign: 'center',
 });
 document.body.appendChild(message);
 
-// Update message font when language changes
 window.addEventListener('languageChanged', () => {
   message.style.fontFamily = getCSSFontFamily(getCurrentLanguage());
 });
 
 // --- Clear Scene Function ---
 function clearScene() {
-  // Remove all physics objects from world
   if (world) {
-    // Remove colliders and bodies
     Object.values(physicsObjects).forEach(obj => {
-      if (obj && obj.collider) {
-        world.removeCollider(obj.collider, true);
-      }
-      if (obj && obj.body) {
-        world.removeRigidBody(obj.body);
-      }
-      // Remove mesh from scene
+      if (obj && obj.collider) world.removeCollider(obj.collider, true);
+      if (obj && obj.body) world.removeRigidBody(obj.body);
       if (obj && obj.mesh) {
         scene.remove(obj.mesh);
         if (obj.mesh.geometry) obj.mesh.geometry.dispose();
@@ -86,7 +107,6 @@ function clearScene() {
     });
   }
 
-  // Reset physics objects
   physicsObjects = {
     platform: null,
     block: null,
@@ -96,7 +116,6 @@ function clearScene() {
     teleporter: null,
   };
 
-  // Reset game state
   keySpawned = false;
   gameOver = false;
 }
@@ -104,78 +123,49 @@ function clearScene() {
 // --- Load Scene Function ---
 async function loadScene(sceneNumber) {
   clearScene();
+  currentScene = sceneNumber;
 
-  if (sceneNumber === 1) {
-    await loadScene1();
-  } else if (sceneNumber === 2) {
-    await loadScene2();
-  }
+  if (sceneNumber === 1) await loadScene1();
+  else if (sceneNumber === 2) await loadScene2();
 
   showMessage(message, t('scene.loaded', { sceneNumber }));
-  setTimeout(() => {
-    message.style.display = 'none';
-  }, 2000);
+  setTimeout(() => (message.style.display = 'none'), 2000);
 }
 
 // --- Initialize Physics World ---
 async function initPhysics() {
-  // Create physics world with gravity
-  if (!world) {
-    world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
-  }
-
-  // Load the first scene
+  if (!world) world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
   await loadScene1();
 }
 
-// --- Scene 1: Original Scene ---
+// --- Scene 1 ---
 async function loadScene1() {
-  // Load physics configuration from DSL
   const playerConfig = await getPlayerConfig();
   const blockConfig = await getBlockConfig();
 
-  // Create platform
   physicsObjects.platform = new Platform(world, scene);
-
-  // Create movable block with DSL-loaded config
   physicsObjects.block = new Block(world, scene, physicsObjects.platform.top, blockConfig);
-
-  // Create goal area
   physicsObjects.goal = new Goal(world, scene, physicsObjects.platform.top);
-
-  // Create teleporter in top left corner
   physicsObjects.teleporter = new Teleporter(world, scene, physicsObjects.platform.top);
 
-  // Set up teleporter event handler to load scene 2
   physicsObjects.teleporter.onPlayerEnter = () => {
     if (!gameOver) {
       showMessage(message, t('teleporter.scene2'));
-      gameOver = true; // Prevent further actions during transition
-      setTimeout(() => {
-        loadScene(2);
-      }, 1000);
+      gameOver = true;
+      setTimeout(() => loadScene(2), 1000);
     }
   };
 
-  // Create player with DSL-loaded config
   physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, playerConfig);
 
-  // --- Camera ---
   camera.position.set(6, 10, 6);
   camera.lookAt(0, 0, 0);
 }
 
-// --- Scene 2: New Scene with Different Layout ---
+// --- Scene 2 ---
 async function loadScene2() {
-  // Load physics configuration from DSL
   const playerConfig = await getPlayerConfig();
-
-  // Create platform (same as scene 1)
   physicsObjects.platform = new Platform(world, scene);
-
-  // No block or goal in this scene - just the platform and teleporter
-
-  // Create teleporter to go back to scene 1 (different position - top right)
   physicsObjects.teleporter = new Teleporter(
     world,
     scene,
@@ -183,31 +173,25 @@ async function loadScene2() {
     new THREE.Vector3(4, 0, -4)
   );
 
-  // Set up teleporter event handler to go back to scene 1
   physicsObjects.teleporter.onPlayerEnter = () => {
     if (!gameOver) {
       showMessage(message, t('teleporter.scene1'));
       gameOver = true;
-      setTimeout(() => {
-        loadScene(1);
-      }, 1000);
+      setTimeout(() => loadScene(1), 1000);
     }
   };
 
-  // Create player in a different starting position with DSL-loaded config
   physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, playerConfig);
-
-  if (physicsObjects.player.body) {
+  if (physicsObjects.player.body)
     physicsObjects.player.body.setTranslation(
       { x: 0, y: physicsObjects.platform.top + 0.3, z: -2 },
       true
     );
-  }
 
   camera.position.set(6, 10, 6);
   camera.lookAt(0, 0, 0);
 
-  // Load the Locked Door (WIN door)
+  // Locked Door
   import('./lockedDoor.js').then(({ LockedDoor }) => {
     const doorPos = new THREE.Vector3(-4, physicsObjects.platform.top, 3);
     const dummyDestination = new THREE.Vector3(0, physicsObjects.platform.top, 0);
@@ -215,89 +199,60 @@ async function loadScene2() {
     physicsObjects.lockedDoor = new LockedDoor(
       world,
       scene,
-      physicsObjects.player, // ✔ FIXED
+      physicsObjects.player,
       dummyDestination,
       doorPos
     );
 
-    // Ensure the door is visually purple in Scene 2
-    if (
-      physicsObjects.lockedDoor &&
-      physicsObjects.lockedDoor.mesh &&
-      physicsObjects.lockedDoor.mesh.material
-    ) {
+    if (physicsObjects.lockedDoor?.mesh?.material) {
       physicsObjects.lockedDoor.mesh.material.color = new THREE.Color(0x8000ff);
       physicsObjects.lockedDoor.mesh.material.needsUpdate = true;
     }
 
     physicsObjects.lockedDoor.onWin = () => {
       import('./GameWinScene.js').then(({ showWinScreen }) => {
-        import('./i18n/translations.js').then(({ t }) => {
-          showWinScreen(scene, t('game.win'));
-        });
+        import('./i18n/translations.js').then(({ t }) => showWinScreen(scene, t('game.win')));
       });
     };
   });
 }
-// --- Phaser Game Configuration ---
+
+// --- Phaser Setup ---
 const config = {
-  type: Phaser.HEADLESS, // Use HEADLESS mode since we're not using Phaser's rendering
+  type: Phaser.HEADLESS,
   width: window.innerWidth,
   height: window.innerHeight,
   parent: 'phaser-container',
-  scene: {
-    create: create,
-    update: update,
-  },
-  // Disable Phaser's rendering since we're using Three.js
-  render: {
-    antialias: false,
-    pixelArt: false,
-  },
+  scene: { create, update },
+  render: { antialias: false, pixelArt: false },
 };
 
-// Create a container for Phaser (though we won't use its rendering)
 const phaserContainer = document.createElement('div');
 phaserContainer.id = 'phaser-container';
 phaserContainer.style.position = 'absolute';
 phaserContainer.style.width = '100%';
 phaserContainer.style.height = '100%';
-phaserContainer.style.pointerEvents = 'auto'; // Enable pointer events for Phaser input
+phaserContainer.style.pointerEvents = 'auto';
 document.body.appendChild(phaserContainer);
 
-// Render initial empty scene
 renderer.render(scene, camera);
 
-// Initialize i18n system
 (async () => {
   await initTranslations();
   initLanguageSelector();
-
-  // Update page title with translated text
   document.title = t('page.title');
-
-  // Update inventory position after i18n is initialized
-  // (inventory is created as singleton before i18n init, so we need to update it now)
-  if (inventory && typeof inventory.updatePosition === 'function') {
-    inventory.updatePosition();
-  }
-
-  // Listen for language changes to update page title
-  window.addEventListener('languageChanged', () => {
-    document.title = t('page.title');
-  });
+  inventory.updatePosition?.();
+  window.addEventListener('languageChanged', () => (document.title = t('page.title')));
 })();
 
 const game = new Phaser.Game(config);
 
+// --- Create Scene ---
 async function create() {
   try {
-    // Initialize physics
     await initPhysics();
-    // Expose test API for integration tests (allows tests to inspect/manipulate physics objects)
-    // Tests can use `window.__TEST_API__` to move bodies or trigger game condition checks.
-    // This is intentionally only a testing helper and does not affect gameplay.
-    // Example usage in tests: window.__TEST_API__.physicsObjects.block.body.setTranslation({x:3,y:...,z:-2}, true)
+    loadGame(); // Load saved progress
+
     window.__TEST_API__ = {
       physicsObjects,
       showMessage: text => showMessage(message, text),
@@ -306,89 +261,66 @@ async function create() {
       world,
     };
   } catch {
-    // Still render the scene even if physics fails
     renderer.render(scene, camera);
   }
 
-  // Handle mouse input through Phaser
+  // Pointer input
   this.input.on('pointerdown', pointer => {
     if (gameOver || !physicsObjects.player || !physicsObjects.platform) return;
 
-    // Convert Phaser pointer coordinates to Three.js normalized device coordinates
     const mouse = new THREE.Vector2(
       (pointer.x / window.innerWidth) * 2 - 1,
       -(pointer.y / window.innerHeight) * 2 + 1
     );
-
-    // Raycast to check for clicks
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
 
-    // Check if key was clicked first
-    if (physicsObjects.key && physicsObjects.key.checkClick(raycaster)) {
-      physicsObjects.key.destroy(); // Remove key from scene and physics
+    // Key click
+    if (physicsObjects.key?.checkClick(raycaster)) {
+      physicsObjects.key.destroy();
       physicsObjects.key = null;
-      return; // Key click handled, don't move player
+      return;
     }
 
-    // Check for click on platform to move player
+    // Move player
     const intersects = raycaster.intersectObject(physicsObjects.platform.mesh);
     if (intersects.length > 0) {
       const clickPoint = intersects[0].point.clone();
-      // Keep click point at platform height
       clickPoint.y = physicsObjects.platform.mesh.position.y + 0.25 + 0.3;
       physicsObjects.player.move(clickPoint);
     }
   });
 
-  // Handle window resize
   window.addEventListener('resize', () => handleResize(camera, renderer, game));
 }
 
+// --- Update Loop ---
 function update(_time, _delta) {
-  // Always render, even if physics isn't ready yet
   if (!world || gameOver) {
     renderer.render(scene, camera);
     return;
   }
-  // Step physics simulation
+
   world.step();
 
-  // Sync physics bodies with Three.js meshes
-  const visualUpdateObjects = [physicsObjects.player, physicsObjects.block].filter(Boolean);
-  visualUpdateObjects.forEach(obj => obj.updateVisual());
-
-  // Update locked door logic each frame (unlocking, fade, win trigger)
-  // Run after physics step so intersectionPair checks are current
-  if (physicsObjects.lockedDoor && typeof physicsObjects.lockedDoor.update === 'function') {
-    physicsObjects.lockedDoor.update();
-  }
+  [physicsObjects.player, physicsObjects.block].filter(Boolean).forEach(obj => obj.updateVisual());
+  physicsObjects.lockedDoor?.update?.();
 
   const blockAtGoal = checkBlockGoal(physicsObjects);
   if (blockAtGoal && !keySpawned) {
-    // Spawn key only once
     const keyPosition = new THREE.Vector3(0, physicsObjects.platform.top + 1, 0);
     physicsObjects.key = new Key(world, scene, keyPosition);
-
-    // Assign onClick behavior
     physicsObjects.key.onClick = () => {
       inventory.addItem('key');
+      saveGame();
     };
-
-    keySpawned = true; // Prevent further spawning
+    keySpawned = true;
   }
 
-  // Check if player is touching the teleporter
-  if (
-    physicsObjects.teleporter &&
-    physicsObjects.teleporter.isPlayerTouching(world, physicsObjects.player)
-  ) {
+  if (physicsObjects.teleporter?.isPlayerTouching(world, physicsObjects.player))
     physicsObjects.teleporter.trigger();
-  }
 
-  // Check if game is over (player or block off platform)
   gameOver = isGameOver(physicsObjects, message);
 
-  // Render Three.js scene
   renderer.render(scene, camera);
 }
