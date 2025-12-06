@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { getCSSFontFamily } from './i18n/font-loader.js';
 import { getCurrentLanguage, t } from './i18n/translations.js';
 import { isRTL } from './i18n/rtl-utils.js';
+import { getThemeColor } from './theme.js';
 
 /**
  * Shows the lose screen with translated text
@@ -33,9 +34,9 @@ export async function showLoseScreen(scene, loseText, onRetry, camera) {
   const fontFamily = getCSSFontFamily(lang);
   const isRTLMode = isRTL();
 
-  // Text styling - red for lose screen
-  ctx.fillStyle = '#ff0000';
-  ctx.strokeStyle = '#330000';
+  // Text styling - use theme colors for lose screen
+  ctx.fillStyle = getThemeColor('loseTextColor');
+  ctx.strokeStyle = getThemeColor('loseTextStroke');
   ctx.lineWidth = 8;
   const fontSize = 160;
   ctx.font = `bold ${fontSize}px ${fontFamily}`;
@@ -70,12 +71,25 @@ export async function showLoseScreen(scene, loseText, onRetry, camera) {
   sprite.renderOrder = 999;
   scene.add(sprite);
 
-  // Background panel
-  const bgGeo = new THREE.PlaneGeometry(10, 6);
-  const bgMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-  const bg = new THREE.Mesh(bgGeo, bgMat);
-  bg.position.set(0, 0, -1);
-  scene.add(bg);
+  // Create 2D background overlay (DOM-based, not 3D)
+  // Remove any existing overlay first
+  if (window.__loseScreenOverlay) {
+    window.__loseScreenOverlay.remove();
+  }
+  const bgOverlay = document.createElement('div');
+  Object.assign(bgOverlay.style, {
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: '0',
+    pointerEvents: 'none',
+  });
+  document.body.appendChild(bgOverlay);
+  // Store reference for cleanup
+  window.__loseScreenOverlay = bgOverlay;
 
   // Create retry button
   const buttonCanvas = document.createElement('canvas');
@@ -83,17 +97,17 @@ export async function showLoseScreen(scene, loseText, onRetry, camera) {
   buttonCanvas.height = 128;
   const btnCtx = buttonCanvas.getContext('2d');
 
-  // Button background
-  btnCtx.fillStyle = '#444444';
+  // Button background - use theme colors
+  btnCtx.fillStyle = getThemeColor('buttonBg');
   btnCtx.fillRect(0, 0, buttonCanvas.width, buttonCanvas.height);
 
-  // Button border
-  btnCtx.strokeStyle = '#ffffff';
+  // Button border - use theme colors
+  btnCtx.strokeStyle = getThemeColor('buttonBorder');
   btnCtx.lineWidth = 4;
   btnCtx.strokeRect(2, 2, buttonCanvas.width - 4, buttonCanvas.height - 4);
 
   // Button text
-  btnCtx.fillStyle = '#ffffff';
+  btnCtx.fillStyle = getThemeColor('textColor');
   const btnFontSize = 48;
   btnCtx.font = `bold ${btnFontSize}px ${fontFamily}`;
   btnCtx.textAlign = 'center';

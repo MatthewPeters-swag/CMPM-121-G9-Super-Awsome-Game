@@ -14,6 +14,7 @@ import { initLanguageSelector } from './i18n/languageSelector.js';
 import { getCSSFontFamily } from './i18n/font-loader.js';
 import { getPlayerConfig, getBlockConfig } from './dsl/physics-config.js';
 import { updateRTLPosition } from './i18n/rtl-utils.js';
+import { initTheme, getThemeColor, applySceneTheme, getGameObjectColors } from './theme.js';
 
 // --- Three.js Scene Setup ---
 const scene = new THREE.Scene();
@@ -24,7 +25,19 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.domElement.style.position = 'absolute';
 renderer.domElement.style.top = '0';
 renderer.domElement.style.left = '0';
+renderer.domElement.style.zIndex = '1'; // Ensure canvas is above overlays
 document.body.appendChild(renderer.domElement);
+
+// --- Three.js Lighting Setup ---
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+directionalLight.position.set(5, 10, 5);
+scene.add(directionalLight);
+
+// Store lights for theme updates
+const lights = { ambient: ambientLight, directional: directionalLight };
 
 // --- Rapier Physics World Setup ---
 let world = null;
@@ -81,22 +94,28 @@ window.saveGame = saveGame;
 
 // --- UI Message ---
 const message = document.createElement('div');
-Object.assign(message.style, {
-  position: 'absolute',
-  top: '20px',
-  left: '50%',
-  transform: 'translateX(-50%)',
-  padding: '10px 20px',
-  background: 'rgba(0,0,0,0.6)',
-  color: 'white',
-  fontFamily: getCSSFontFamily(getCurrentLanguage()),
-  fontSize: '20px',
-  display: 'none',
-  borderRadius: '6px',
-  zIndex: '1000',
-  textAlign: 'center',
-});
+const updateMessageStyle = () => {
+  Object.assign(message.style, {
+    position: 'absolute',
+    top: '20px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    padding: '10px 20px',
+    background: getThemeColor('messageBg'),
+    color: getThemeColor('textColor'),
+    fontFamily: getCSSFontFamily(getCurrentLanguage()),
+    fontSize: '20px',
+    display: 'none',
+    borderRadius: '6px',
+    zIndex: '1000',
+    textAlign: 'center',
+    border: `2px solid ${getThemeColor('messageBorder')}`,
+    transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
+  });
+};
+updateMessageStyle();
 document.body.appendChild(message);
+window.addEventListener('themeChanged', updateMessageStyle);
 
 // --- Move Counter UI ---
 const moveCounter = document.createElement('div');
@@ -105,13 +124,8 @@ const moveCounterLTRPosition = {
   top: '70px',
   left: '10px',
   padding: '10px 15px',
-  background: 'rgba(0,0,0,0.6)',
-  color: 'white',
-  fontFamily: getCSSFontFamily(getCurrentLanguage()),
-  fontSize: '18px',
   borderRadius: '6px',
   zIndex: '1000',
-  border: '2px solid white',
 };
 const moveCounterRTLPosition = {
   position: 'absolute',
@@ -119,13 +133,20 @@ const moveCounterRTLPosition = {
   right: '10px',
   left: 'auto',
   padding: '10px 15px',
-  background: 'rgba(0,0,0,0.6)',
-  color: 'white',
-  fontFamily: getCSSFontFamily(getCurrentLanguage()),
-  fontSize: '18px',
   borderRadius: '6px',
   zIndex: '1000',
-  border: '2px solid white',
+};
+
+const updateMoveCounterStyle = () => {
+  Object.assign(moveCounter.style, {
+    background: getThemeColor('backgroundColor'),
+    color: getThemeColor('textColor'),
+    fontFamily: getCSSFontFamily(getCurrentLanguage()),
+    fontSize: '18px',
+    border: `2px solid ${getThemeColor('borderColorBright')}`,
+    transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
+    ...moveCounterLTRPosition,
+  });
 };
 
 function updateMoveCounter() {
@@ -166,9 +187,11 @@ window.incrementMoveCount = incrementMoveCount;
 window.trackMoveAction = trackMoveAction;
 
 // Initial setup
+updateMoveCounterStyle();
 updateRTLPosition(moveCounter, moveCounterLTRPosition, moveCounterRTLPosition);
 moveCounter.textContent = `${t('ui.moves')}:  0`;
 document.body.appendChild(moveCounter);
+window.addEventListener('themeChanged', updateMoveCounterStyle);
 
 // --- Undo Button UI ---
 const undoButton = document.createElement('button');
@@ -177,12 +200,7 @@ const undoButtonLTRPosition = {
   top: '50px',
   right: '10px',
   padding: '8px 16px',
-  background: 'rgba(0,0,0,0.7)',
-  color: 'white',
-  fontFamily: getCSSFontFamily(getCurrentLanguage()),
-  fontSize: '14px',
   borderRadius: '4px',
-  border: '2px solid rgba(255, 255, 255, 0.5)',
   cursor: 'pointer',
   zIndex: '2000',
 };
@@ -192,14 +210,21 @@ const undoButtonRTLPosition = {
   left: '10px',
   right: 'auto',
   padding: '8px 16px',
-  background: 'rgba(0,0,0,0.7)',
-  color: 'white',
-  fontFamily: getCSSFontFamily(getCurrentLanguage()),
-  fontSize: '14px',
   borderRadius: '4px',
-  border: '2px solid rgba(255, 255, 255, 0.5)',
   cursor: 'pointer',
   zIndex: '2000',
+};
+
+const updateUndoButtonStyle = () => {
+  Object.assign(undoButton.style, {
+    background: getThemeColor('buttonBg'),
+    color: getThemeColor('textColor'),
+    fontFamily: getCSSFontFamily(getCurrentLanguage()),
+    fontSize: '14px',
+    border: `2px solid ${getThemeColor('buttonBorder')}`,
+    transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
+    ...undoButtonLTRPosition,
+  });
 };
 
 function updateUndoButton() {
@@ -213,13 +238,13 @@ function updateUndoButton() {
 
 undoButton.addEventListener('mouseenter', () => {
   if (actionHistory.length > 0) {
-    undoButton.style.borderColor = 'rgba(255, 255, 255, 0.8)';
-    undoButton.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+    undoButton.style.borderColor = getThemeColor('buttonBorderHover');
+    undoButton.style.backgroundColor = getThemeColor('buttonBgHover');
   }
 });
 undoButton.addEventListener('mouseleave', () => {
-  undoButton.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-  undoButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+  undoButton.style.borderColor = getThemeColor('buttonBorder');
+  undoButton.style.backgroundColor = getThemeColor('buttonBg');
 });
 
 undoButton.addEventListener('click', () => {
@@ -227,8 +252,10 @@ undoButton.addEventListener('click', () => {
   undoLastAction();
 });
 
+updateUndoButtonStyle();
 updateUndoButton();
 document.body.appendChild(undoButton);
+window.addEventListener('themeChanged', updateUndoButtonStyle);
 
 window.addEventListener('languageChanged', () => {
   updateMoveCounter();
@@ -241,6 +268,38 @@ window.addEventListener('languageChanged', () => {
 window.addEventListener('languageChanged', () => {
   message.style.fontFamily = getCSSFontFamily(getCurrentLanguage());
 });
+
+// --- Update 3D Scene Theme ---
+function updateSceneTheme() {
+  applySceneTheme(scene, lights);
+  updateGameObjectTheme();
+}
+
+function updateGameObjectTheme() {
+  const colors = getGameObjectColors();
+
+  // Update platform color
+  if (physicsObjects.platform?.mesh?.material) {
+    physicsObjects.platform.mesh.material.color.setHex(colors.platformColor);
+  }
+
+  // Update block color
+  if (physicsObjects.block?.mesh?.material) {
+    physicsObjects.block.mesh.material.color.setHex(colors.blockColor);
+  }
+
+  // Update goal color
+  if (physicsObjects.goal?.mesh?.material) {
+    physicsObjects.goal.mesh.material.color.setHex(colors.goalColor);
+  }
+
+  // Update teleporter color
+  if (physicsObjects.teleporter?.mesh?.material) {
+    physicsObjects.teleporter.mesh.material.color.setHex(colors.teleporterColor);
+  }
+}
+
+window.addEventListener('themeChanged', updateSceneTheme);
 
 // --- Undo Function ---
 function undoLastAction() {
@@ -305,6 +364,16 @@ function undoLastAction() {
 
 // --- Clear Scene Function ---
 function clearScene() {
+  // Remove any win/lose screen overlays
+  if (window.__winScreenOverlay) {
+    window.__winScreenOverlay.remove();
+    window.__winScreenOverlay = null;
+  }
+  if (window.__loseScreenOverlay) {
+    window.__loseScreenOverlay.remove();
+    window.__loseScreenOverlay = null;
+  }
+
   // Clear all Three.js scene objects (including GameLoseScene sprites)
   while (scene.children.length > 0) {
     const obj = scene.children[0];
@@ -367,6 +436,10 @@ async function loadScene1() {
   physicsObjects.goal = new Goal(world, scene, physicsObjects.platform.top);
   physicsObjects.teleporter = new Teleporter(world, scene, physicsObjects.platform.top);
 
+  // Apply theme colors to game objects
+  updateGameObjectTheme();
+  applySceneTheme(scene, lights);
+
   physicsObjects.teleporter.onPlayerEnter = () => {
     showMessage(message, t('teleporter.scene2'));
     gameOver = true;
@@ -389,6 +462,10 @@ async function loadScene2() {
     physicsObjects.platform.top,
     new THREE.Vector3(4, 0, -4)
   );
+
+  // Apply theme colors to game objects
+  updateGameObjectTheme();
+  applySceneTheme(scene, lights);
 
   physicsObjects.teleporter.onPlayerEnter = () => {
     showMessage(message, t('teleporter.scene1'));
@@ -450,11 +527,13 @@ phaserContainer.style.position = 'absolute';
 phaserContainer.style.width = '100%';
 phaserContainer.style.height = '100%';
 phaserContainer.style.pointerEvents = 'auto';
+phaserContainer.style.zIndex = '2'; // Ensure input layer is above canvas
 document.body.appendChild(phaserContainer);
 
 renderer.render(scene, camera);
 
 (async () => {
+  initTheme(); // Initialize theme system first
   await initTranslations();
   initLanguageSelector();
   document.title = t('page.title');

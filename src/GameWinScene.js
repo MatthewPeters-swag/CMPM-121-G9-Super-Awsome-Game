@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { getCSSFontFamily } from './i18n/font-loader.js';
 import { getCurrentLanguage, t } from './i18n/translations.js';
 import { isRTL } from './i18n/rtl-utils.js';
+import { getThemeColor } from './theme.js';
 
 /**
  * Shows the win screen with translated text
@@ -32,9 +33,9 @@ export async function showWinScreen(scene, winText, moveCount = 0) {
   const fontFamily = getCSSFontFamily(lang);
   const isRTLMode = isRTL();
 
-  // Text styling
-  ctx.fillStyle = '#00ff00';
-  ctx.strokeStyle = '#003300';
+  // Text styling - use theme colors
+  ctx.fillStyle = getThemeColor('winTextColor');
+  ctx.strokeStyle = getThemeColor('winTextStroke');
   ctx.lineWidth = 8;
   const fontSize = 160;
   ctx.font = `bold ${fontSize}px ${fontFamily}`;
@@ -69,12 +70,21 @@ export async function showWinScreen(scene, winText, moveCount = 0) {
   sprite.renderOrder = 999;
   scene.add(sprite);
 
-  // Background panel
-  const bgGeo = new THREE.PlaneGeometry(10, 6);
-  const bgMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-  const bg = new THREE.Mesh(bgGeo, bgMat);
-  bg.position.set(0, 0, -1);
-  scene.add(bg);
+  // Create 2D background overlay (DOM-based, not 3D)
+  const bgOverlay = document.createElement('div');
+  Object.assign(bgOverlay.style, {
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: '0',
+    pointerEvents: 'none',
+  });
+  document.body.appendChild(bgOverlay);
+  // Store reference for cleanup
+  window.__winScreenOverlay = bgOverlay;
 
   // Create move count text
   const moveCanvas = document.createElement('canvas');
@@ -83,9 +93,9 @@ export async function showWinScreen(scene, winText, moveCount = 0) {
   const moveCtx = moveCanvas.getContext('2d');
   moveCtx.clearRect(0, 0, moveCanvas.width, moveCanvas.height);
 
-  // Move count styling
-  moveCtx.fillStyle = '#ffffff';
-  moveCtx.strokeStyle = '#000000';
+  // Move count styling - use theme colors
+  moveCtx.fillStyle = getThemeColor('moveCountTextColor');
+  moveCtx.strokeStyle = getThemeColor('moveCountTextStroke');
   moveCtx.lineWidth = 6;
   const moveFontSize = 80;
   moveCtx.font = `bold ${moveFontSize}px ${fontFamily}`;

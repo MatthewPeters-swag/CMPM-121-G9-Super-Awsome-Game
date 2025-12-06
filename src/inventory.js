@@ -1,4 +1,5 @@
 import { isRTL, updateRTLPosition } from './i18n/rtl-utils.js';
+import { getThemeColor } from './theme.js';
 
 /**
  * Simple Inventory UI with 5 slots + item tracking
@@ -37,23 +38,43 @@ export class InventoryUI {
       this.updatePosition();
     });
 
+    // Listen for theme changes to update slot colors
+    window.addEventListener('themeChanged', () => {
+      this.updateSlotStyles();
+    });
+
     // Create slots
     for (let i = 0; i < this.maxSlots; i++) {
       const slot = document.createElement('div');
-      Object.assign(slot.style, {
-        width: '50px',
-        height: '50px',
-        border: '2px solid white',
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      });
+      this.updateSlotStylesForElement(slot);
       this.container.appendChild(slot);
       this.slots.push(slot);
     }
 
     document.body.appendChild(this.container);
+  }
+
+  /**
+   * Updates styles for a slot element
+   */
+  updateSlotStylesForElement(slot) {
+    Object.assign(slot.style, {
+      width: '50px',
+      height: '50px',
+      border: `2px solid ${getThemeColor('inventoryBorder')}`,
+      backgroundColor: getThemeColor('slotBg'),
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'background-color 0.3s ease, border-color 0.3s ease',
+    });
+  }
+
+  /**
+   * Updates all slot styles
+   */
+  updateSlotStyles() {
+    this.slots.forEach(slot => this.updateSlotStylesForElement(slot));
   }
 
   /**
@@ -75,8 +96,9 @@ export class InventoryUI {
     Object.assign(icon.style, {
       width: '30px',
       height: '30px',
-      backgroundColor: type === 'key' ? 'gold' : 'white',
+      backgroundColor: type === 'key' ? 'gold' : getThemeColor('textColor'),
       borderRadius: '4px',
+      transition: 'background-color 0.3s ease',
     });
 
     // Important: mark dataset so code can detect it

@@ -11,10 +11,47 @@
     <!-- Noto Sans Arabic for Arabic characters -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
     <style>
+      :root {
+        /* Theme CSS variables - will be set by theme.js */
+        --theme-backgroundColor: rgba(255, 255, 255, 0.9);
+        --theme-backgroundColorTransparent: rgba(255, 255, 255, 0.6);
+        --theme-textColor: #000000;
+        --theme-borderColor: #cccccc;
+        --theme-borderColorBright: #666666;
+        --theme-buttonBg: rgba(230, 230, 230, 0.95);
+        --theme-buttonBgHover: rgba(200, 200, 200, 0.95);
+        --theme-buttonBorder: rgba(0, 0, 0, 0.3);
+        --theme-buttonBorderHover: rgba(0, 0, 0, 0.5);
+        --theme-inventoryBg: rgba(255, 255, 255, 0.8);
+        --theme-inventoryBorder: #000000;
+        --theme-slotBg: rgba(200, 200, 200, 0.5);
+        --theme-messageBg: rgba(240, 240, 240, 0.95);
+        --theme-messageBorder: rgba(0, 0, 0, 0.2);
+        --theme-winTextColor: #00aa00;
+        --theme-winTextStroke: #003300;
+        --theme-loseTextColor: #ff3333;
+        --theme-loseTextStroke: #330000;
+        --theme-moveCountTextColor: #333333;
+        --theme-moveCountTextStroke: #cccccc;
+      }
+
       body { 
         margin: 0;
         /* Default font stack with Chinese and Arabic support */
         font-family: 'Noto Sans SC', 'Noto Sans Arabic', sans-serif, Arial, Helvetica;
+        /* Smooth background color transitions when theme changes */
+        transition: background-color 0.3s ease;
+      }
+
+      /* Base background color responds to theme */
+      body[data-theme="light"] {
+        background-color: #ffffff;
+        color: #000000;
+      }
+
+      body[data-theme="dark"] {
+        background-color: #1a1a1a;
+        color: #e0e0e0;
       }
     </style>
   </head>
