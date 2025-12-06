@@ -78,3 +78,21 @@ If the puzzle is successfully completed, the key can be used to beat the game. I
 The game can be beaten by completing the puzzle and using the key, and the game can be lost by knocking the cube off the edge of the map or by falling off yourself at any point in the game.
 ## Reflection
 Our plan has remained the same from F1, but this part of the assignment was different because each group member needed to complete their part of the assignment in order, for example the puzzle needed to spawn an interactable key before the door the key unlocks could be properly implemented. Another difference was that everyone was a design lead, as the only thing that needed to be implemented was the game itself.
+
+Devlog Entry 12/05/2025
+## Selected Requirements
+Languages
+We picked languages and external DSL as a sort of pair of requirements since the best method of implementing different languages would be to use JSON files to store translated text
+External DSL
+Unlimited Undo
+We picked this requirement because we thought that it could be smoothly integrated into our vision of the game. Unlimited undos added to the functionality of our game.
+Visual Themes
+Game Save
+## How we satisfied the software requirements
+The game uses a dropdown menu to switch between english, arabic, and chinese and remembers the user’s last selected language.
+The game uses JSON files for two purposes: storing the game text in each language and storing the physics data for the player and cube (i.e. friction, mass, damping). Additionally added tools for the JSON files, specifically the physics ones which add features such as: hovering an attribute to see it a brief description of an attribute when modifying physics JSON and validation of the DSL files which can fail and block commits if aspects of them are incorrect of invalid
+The game now saves the previously taken action by saving the position of the player in the prior move. It also stores actions like picking up a key as a prior action. It does this by tracking the type of the last action. If the action was a ‘move’ action then the game looks into the previous move database to find the last coordinates of the player and the block. If it is the ‘keypickup’ action then it removes the key from the player’s inventory and respawns the key in the level. If the previous action caused the block to move off of the goal, the game despawns the key. Resetting the game after you lose clears all action history.
+Game has different set colors based on the operating systems setting picked for either light or dark mode and changes the games color scheme accordingly.
+Game autosaves so that if the site refreshes almost no progress is lost. Player position, cube position, and key status are all saved.
+## Reflection
+Our plan has changed a little bit in the implementation of our game since the previous devlogs. Overall F3 has given us a chance to really work on the polish and the usability of our game rather than having us focus on adding flashy features and new mechanics. Our game now functions as a game rather than a buggy prototype. The playtesting in the section showed how the usability of our program really affected the experience that the players had. However, while the overall vision that we had for our features didn’t change that much, we still altered certain aspects about how the game functions. The game now tracks how many moves it takes for the player to solve a puzzle. This promotes replayability as players may now try to complete the game again, but figure out a way to do it in fewer moves.
