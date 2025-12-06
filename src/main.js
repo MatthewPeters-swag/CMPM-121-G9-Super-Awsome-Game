@@ -560,6 +560,7 @@ function update(_time, _delta) {
           gameOver = false;
           keySpawned = false;
           moveCount = 0;
+          inventory.clear(); // Clear inventory on retry
           updateMoveCounter();
           loadScene(1);
         },

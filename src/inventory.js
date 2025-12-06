@@ -112,6 +112,20 @@ export class InventoryUI {
     console.log('[Inventory] removeLastItem:', type, 'from slot', foundSlotIndex);
     return true;
   }
+
+  clear() {
+    // Clear items array
+    this.items = [];
+
+    // Remove all visual icons from slots
+    this.slots.forEach(slot => {
+      while (slot.firstChild) {
+        slot.removeChild(slot.firstChild);
+      }
+    });
+
+    console.log('[Inventory] cleared all items');
+  }
 }
 
 // Create a singleton instance
