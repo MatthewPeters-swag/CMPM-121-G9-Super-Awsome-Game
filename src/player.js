@@ -36,10 +36,16 @@ export class Player {
     const dir = new THREE.Vector3(clickPoint.x - playerPos.x, 0, clickPoint.z - playerPos.z);
     const distance = dir.length();
     if (distance > 0.1) {
+      // Track previous position for undo
+      const previousPosition = { x: playerPos.x, y: playerPos.y, z: playerPos.z };
+
       dir.normalize();
       const scaledForce = Math.min(distance * this.minForce, this.maxForce);
       const impulse = new RAPIER.Vector3(dir.x * scaledForce, 0, dir.z * scaledForce);
       this.body.applyImpulse(impulse, true);
+
+      // Track move action for undo
+      window.trackMoveAction?.(previousPosition);
       window.incrementMoveCount?.(); // Increment move counter
       window.saveGame?.(); // Auto-save on move
     }

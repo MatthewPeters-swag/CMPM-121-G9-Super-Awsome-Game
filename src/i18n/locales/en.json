@@ -17,7 +17,8 @@
   },
   "ui": {
     "language": "Language",
-    "moves": "Moves"
+    "moves": "Moves",
+    "undo": "Undo"
   }
 }
 

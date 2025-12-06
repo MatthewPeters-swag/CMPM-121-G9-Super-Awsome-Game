@@ -88,6 +88,30 @@ export class InventoryUI {
   hasItem(type) {
     return this.items.includes(type);
   }
+
+  removeLastItem(type) {
+    // Find the last occurrence of the item type
+    const lastIndex = this.items.lastIndexOf(type);
+    if (lastIndex === -1) return false;
+
+    // Remove from items array
+    this.items.splice(lastIndex, 1);
+
+    // Find and remove the visual icon from the slot
+    let foundSlotIndex = -1;
+    for (let i = this.slots.length - 1; i >= 0; i--) {
+      const slot = this.slots[i];
+      const icon = slot.querySelector('[data-item="' + type + '"]');
+      if (icon) {
+        slot.removeChild(icon);
+        foundSlotIndex = i;
+        break;
+      }
+    }
+
+    console.log('[Inventory] removeLastItem:', type, 'from slot', foundSlotIndex);
+    return true;
+  }
 }
 
 // Create a singleton instance
