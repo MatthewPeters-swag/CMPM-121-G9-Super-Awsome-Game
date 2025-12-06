@@ -9,7 +9,8 @@
   "game": {
     "lose": "لقد خسرت!",
     "win": "لقد فزت!",
-    "completedIn": "اكتمل في {{moves}} حركات!"
+    "completedIn": "اكتمل في {{moves}} حركات!",
+    "retry": "إعادة المحاولة"
   },
   "page": {
     "title": "تطبيقي الأول بـ three.js"

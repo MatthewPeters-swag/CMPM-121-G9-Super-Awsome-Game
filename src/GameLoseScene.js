@@ -105,7 +105,7 @@ export async function showLoseScreen(scene, loseText, onRetry, camera) {
     btnCtx.scale(-1, 1);
   }
 
-  btnCtx.fillText('RETRY', buttonCanvas.width / 2, buttonCanvas.height / 2);
+  btnCtx.fillText(t('game.retry'), buttonCanvas.width / 2, buttonCanvas.height / 2);
 
   if (isRTLMode) {
     btnCtx.restore();

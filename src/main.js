@@ -214,11 +214,9 @@ async function loadScene1() {
   physicsObjects.teleporter = new Teleporter(world, scene, physicsObjects.platform.top);
 
   physicsObjects.teleporter.onPlayerEnter = () => {
-    if (!gameOver) {
-      showMessage(message, t('teleporter.scene2'));
-      gameOver = true;
-      setTimeout(() => loadScene(2), 1000);
-    }
+    showMessage(message, t('teleporter.scene2'));
+    gameOver = true;
+    loadScene(2);
   };
 
   physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, playerConfig);
@@ -239,11 +237,9 @@ async function loadScene2() {
   );
 
   physicsObjects.teleporter.onPlayerEnter = () => {
-    if (!gameOver) {
-      showMessage(message, t('teleporter.scene1'));
-      gameOver = true;
-      setTimeout(() => loadScene(1), 1000);
-    }
+    showMessage(message, t('teleporter.scene1'));
+    gameOver = true;
+    loadScene(1);
   };
 
   physicsObjects.player = new Player(world, scene, physicsObjects.platform.top, playerConfig);
@@ -385,7 +381,7 @@ function update(_time, _delta) {
     keySpawned = true;
   }
 
-  if (physicsObjects.teleporter?.isPlayerTouching(world, physicsObjects.player))
+  if (!gameOver && physicsObjects.teleporter?.isPlayerTouching(world, physicsObjects.player))
     physicsObjects.teleporter.trigger();
 
   const wasGameOver = gameOver;
