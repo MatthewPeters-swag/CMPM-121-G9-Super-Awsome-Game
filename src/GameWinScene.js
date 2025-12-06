@@ -46,19 +46,8 @@ export async function showWinScreen(scene, winText, moveCount = 0) {
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
 
-  // For RTL languages, we can mirror the canvas if needed
-  if (isRTLMode) {
-    ctx.save();
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
-  }
-
   ctx.strokeText(text, cx, cy);
   ctx.fillText(text, cx, cy);
-
-  if (isRTLMode) {
-    ctx.restore();
-  }
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;
