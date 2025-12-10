@@ -123,6 +123,7 @@ const moveCounterLTRPosition = {
   position: 'absolute',
   top: '70px',
   left: '10px',
+  right: 'auto',
   padding: '10px 15px',
   borderRadius: '6px',
   zIndex: '1000',
@@ -147,6 +148,8 @@ const updateMoveCounterStyle = () => {
     transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
     ...moveCounterLTRPosition,
   });
+  // Ensure RTL/LTR positioning is correct after applying base styles
+  updateRTLPosition(moveCounter, moveCounterLTRPosition, moveCounterRTLPosition);
 };
 
 function updateMoveCounter() {
@@ -199,6 +202,7 @@ const undoButtonLTRPosition = {
   position: 'absolute',
   top: '50px',
   right: '10px',
+  left: 'auto',
   padding: '8px 16px',
   borderRadius: '4px',
   cursor: 'pointer',
@@ -225,6 +229,8 @@ const updateUndoButtonStyle = () => {
     transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
     ...undoButtonLTRPosition,
   });
+  // Ensure RTL/LTR positioning is correct after applying base styles
+  updateRTLPosition(undoButton, undoButtonLTRPosition, undoButtonRTLPosition);
 };
 
 function updateUndoButton() {
