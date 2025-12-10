@@ -192,7 +192,8 @@ window.trackMoveAction = trackMoveAction;
 // Initial setup
 updateMoveCounterStyle();
 updateRTLPosition(moveCounter, moveCounterLTRPosition, moveCounterRTLPosition);
-moveCounter.textContent = `${t('ui.moves')}:  0`;
+// Text content will be set after translations load (see async init below)
+moveCounter.textContent = 'Moves: 0'; // Temporary placeholder
 document.body.appendChild(moveCounter);
 window.addEventListener('themeChanged', updateMoveCounterStyle);
 
@@ -259,7 +260,8 @@ undoButton.addEventListener('click', () => {
 });
 
 updateUndoButtonStyle();
-updateUndoButton();
+// Text content will be set after translations load (see async init below)
+undoButton.textContent = 'Undo'; // Temporary placeholder
 document.body.appendChild(undoButton);
 window.addEventListener('themeChanged', updateUndoButtonStyle);
 
@@ -545,6 +547,7 @@ renderer.render(scene, camera);
   document.title = t('page.title');
   inventory.updatePosition?.();
   updateMoveCounter(); // Update move counter with translations
+  updateUndoButton(); // Update undo button with translations
   window.addEventListener('languageChanged', () => (document.title = t('page.title')));
 })();
 
