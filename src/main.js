@@ -123,6 +123,7 @@ const moveCounterLTRPosition = {
   position: 'absolute',
   top: '70px',
   left: '10px',
+  right: 'auto',
   padding: '10px 15px',
   borderRadius: '6px',
   zIndex: '1000',
@@ -147,6 +148,8 @@ const updateMoveCounterStyle = () => {
     transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
     ...moveCounterLTRPosition,
   });
+  // Ensure RTL/LTR positioning is correct after applying base styles
+  updateRTLPosition(moveCounter, moveCounterLTRPosition, moveCounterRTLPosition);
 };
 
 function updateMoveCounter() {
@@ -189,7 +192,8 @@ window.trackMoveAction = trackMoveAction;
 // Initial setup
 updateMoveCounterStyle();
 updateRTLPosition(moveCounter, moveCounterLTRPosition, moveCounterRTLPosition);
-moveCounter.textContent = `${t('ui.moves')}:  0`;
+// Text content will be set after translations load (see async init below)
+moveCounter.textContent = 'Moves: 0'; // Temporary placeholder
 document.body.appendChild(moveCounter);
 window.addEventListener('themeChanged', updateMoveCounterStyle);
 
@@ -199,6 +203,7 @@ const undoButtonLTRPosition = {
   position: 'absolute',
   top: '50px',
   right: '10px',
+  left: 'auto',
   padding: '8px 16px',
   borderRadius: '4px',
   cursor: 'pointer',
@@ -225,6 +230,8 @@ const updateUndoButtonStyle = () => {
     transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
     ...undoButtonLTRPosition,
   });
+  // Ensure RTL/LTR positioning is correct after applying base styles
+  updateRTLPosition(undoButton, undoButtonLTRPosition, undoButtonRTLPosition);
 };
 
 function updateUndoButton() {
@@ -253,7 +260,8 @@ undoButton.addEventListener('click', () => {
 });
 
 updateUndoButtonStyle();
-updateUndoButton();
+// Text content will be set after translations load (see async init below)
+undoButton.textContent = 'Undo'; // Temporary placeholder
 document.body.appendChild(undoButton);
 window.addEventListener('themeChanged', updateUndoButtonStyle);
 
@@ -539,6 +547,7 @@ renderer.render(scene, camera);
   document.title = t('page.title');
   inventory.updatePosition?.();
   updateMoveCounter(); // Update move counter with translations
+  updateUndoButton(); // Update undo button with translations
   window.addEventListener('languageChanged', () => (document.title = t('page.title')));
 })();
 

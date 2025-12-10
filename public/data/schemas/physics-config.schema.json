@@ -6,6 +6,10 @@
   "type": "object",
   "required": ["player", "block"],
   "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Reference to the JSON schema file for validation and autocomplete"
+    },
     "player": {
       "type": "object",
       "description": "Player physics configuration",
@@ -13,7 +17,8 @@
       "properties": {
         "friction": {
           "type": "number",
-          "description": "Friction coefficient between player and surfaces. Higher values make the player slide less.",
+          "description": "Friction coefficient between player and surfaces. Higher values make the player slide less. Range: 0.0 - 1.0. Default: 0.75",
+          "markdownDescription": "Friction coefficient between player and surfaces. Higher values make the player slide less.\n\n**Range:** 0.0 - 1.0\n**Default:** 0.75\n**Examples:** 0.75, 0.5, 1.0",
           "minimum": 0.0,
           "maximum": 1.0,
           "default": 0.75,
@@ -21,28 +26,32 @@
         },
         "minForce": {
           "type": "number",
-          "description": "Base force multiplier for player movement. Scales with click distance.",
+          "description": "Base force multiplier for player movement. Scales with click distance. Range: > 0. Default: 1.0",
+          "markdownDescription": "Base force multiplier for player movement. Scales with click distance.\n\n**Range:** > 0\n**Default:** 1.0\n**Examples:** 1.0, 0.5, 2.0",
           "exclusiveMinimum": 0,
           "default": 1.0,
           "examples": [1.0, 0.5, 2.0]
         },
         "maxForce": {
           "type": "number",
-          "description": "Maximum force cap for far clicks. Prevents excessive force on distant clicks. Must be >= minForce.",
+          "description": "Maximum force cap for far clicks. Prevents excessive force on distant clicks. Must be >= minForce. Range: > 0. Default: 3.0",
+          "markdownDescription": "Maximum force cap for far clicks. Prevents excessive force on distant clicks. Must be >= minForce.\n\n**Range:** > 0 (must be >= minForce)\n**Default:** 3.0\n**Examples:** 3.0, 2.0, 5.0",
           "exclusiveMinimum": 0,
           "default": 3.0,
           "examples": [3.0, 2.0, 5.0]
         },
         "linearDamping": {
           "type": "number",
-          "description": "Linear damping coefficient. Reduces linear velocity over time. Higher values = more resistance to movement.",
+          "description": "Linear damping coefficient. Reduces linear velocity over time. Higher values = more resistance to movement. Range: >= 0. Default: 0.3",
+          "markdownDescription": "Linear damping coefficient. Reduces linear velocity over time. Higher values = more resistance to movement.\n\n**Range:** >= 0\n**Default:** 0.3\n**Examples:** 0.3, 0.0, 1.0",
           "minimum": 0,
           "default": 0.3,
           "examples": [0.3, 0.0, 1.0]
         },
         "angularDamping": {
           "type": "number",
-          "description": "Angular damping coefficient. Reduces rotational velocity over time. Higher values = less spinning.",
+          "description": "Angular damping coefficient. Reduces rotational velocity over time. Higher values = less spinning. Range: >= 0. Default: 0.8",
+          "markdownDescription": "Angular damping coefficient. Reduces rotational velocity over time. Higher values = less spinning.\n\n**Range:** >= 0\n**Default:** 0.8\n**Examples:** 0.8, 0.0, 1.0",
           "minimum": 0,
           "default": 0.8,
           "examples": [0.8, 0.0, 1.0]
@@ -57,21 +66,24 @@
       "properties": {
         "linearDamping": {
           "type": "number",
-          "description": "Linear damping coefficient. Reduces linear velocity over time.",
+          "description": "Linear damping coefficient. Reduces linear velocity over time. Range: >= 0. Default: 0.2",
+          "markdownDescription": "Linear damping coefficient. Reduces linear velocity over time.\n\n**Range:** >= 0\n**Default:** 0.2\n**Examples:** 0.2, 0.0, 0.5",
           "minimum": 0,
           "default": 0.2,
           "examples": [0.2, 0.0, 0.5]
         },
         "angularDamping": {
           "type": "number",
-          "description": "Angular damping coefficient. Reduces rotational velocity over time.",
+          "description": "Angular damping coefficient. Reduces rotational velocity over time. Range: >= 0. Default: 0.3",
+          "markdownDescription": "Angular damping coefficient. Reduces rotational velocity over time.\n\n**Range:** >= 0\n**Default:** 0.3\n**Examples:** 0.3, 0.0, 0.5",
           "minimum": 0,
           "default": 0.3,
           "examples": [0.3, 0.0, 0.5]
         },
         "friction": {
           "type": "number",
-          "description": "Friction coefficient between block and surfaces.",
+          "description": "Friction coefficient between block and surfaces. Range: 0.0 - 1.0. Default: 0.3",
+          "markdownDescription": "Friction coefficient between block and surfaces.\n\n**Range:** 0.0 - 1.0\n**Default:** 0.3\n**Examples:** 0.3, 0.0, 1.0",
           "minimum": 0.0,
           "maximum": 1.0,
           "default": 0.3,
@@ -79,7 +91,8 @@
         },
         "density": {
           "type": "number",
-          "description": "Density of the block. Affects mass and inertia. Higher density makes blocks harder to push but more stable.",
+          "description": "Density of the block. Affects mass and inertia. Higher density makes blocks harder to push but more stable. Range: > 0. Default: 0.5",
+          "markdownDescription": "Density of the block. Affects mass and inertia. Higher density makes blocks harder to push but more stable.\n\n**Range:** > 0\n**Default:** 0.5\n**Examples:** 0.5, 0.1, 2.0",
           "exclusiveMinimum": 0,
           "default": 0.5,
           "examples": [0.5, 0.1, 2.0]
