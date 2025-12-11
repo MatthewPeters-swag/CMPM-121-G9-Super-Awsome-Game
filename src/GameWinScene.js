@@ -22,8 +22,9 @@ export async function showWinScreen(scene, winText, moveCount = 0) {
   // Create big WIN text as a CanvasTexture so it always appears
   // This approach works reliably for all languages including Chinese and Arabic
   const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 512;
+  // Use higher resolution for sharper text
+  canvas.width = 2048;
+  canvas.height = 1024;
   const ctx = canvas.getContext('2d');
   // Background transparent
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -36,8 +37,8 @@ export async function showWinScreen(scene, winText, moveCount = 0) {
   // Text styling - use theme colors
   ctx.fillStyle = getThemeColor('winTextColor');
   ctx.strokeStyle = getThemeColor('winTextStroke');
-  ctx.lineWidth = 8;
-  const fontSize = 160;
+  ctx.lineWidth = 16; // Scaled with canvas resolution
+  const fontSize = 320; // Scaled with canvas resolution
   ctx.font = `bold ${fontSize}px ${fontFamily}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -51,6 +52,9 @@ export async function showWinScreen(scene, winText, moveCount = 0) {
   ctx.fillText(text, cx, cy);
 
   const tex = new THREE.CanvasTexture(canvas);
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.anisotropy = 16;
   tex.needsUpdate = true;
 
   // Use a Sprite so the texture is always flat and faces the camera (no 3D skew)
@@ -88,16 +92,17 @@ export async function showWinScreen(scene, winText, moveCount = 0) {
 
   // Create move count text
   const moveCanvas = document.createElement('canvas');
-  moveCanvas.width = 1024;
-  moveCanvas.height = 256;
+  // Use higher resolution for sharper text
+  moveCanvas.width = 2048;
+  moveCanvas.height = 512;
   const moveCtx = moveCanvas.getContext('2d');
   moveCtx.clearRect(0, 0, moveCanvas.width, moveCanvas.height);
 
   // Move count styling - use theme colors
   moveCtx.fillStyle = getThemeColor('moveCountTextColor');
   moveCtx.strokeStyle = getThemeColor('moveCountTextStroke');
-  moveCtx.lineWidth = 6;
-  const moveFontSize = 80;
+  moveCtx.lineWidth = 12; // Scaled with canvas resolution
+  const moveFontSize = 160; // Scaled with canvas resolution
   moveCtx.font = `bold ${moveFontSize}px ${fontFamily}`;
   moveCtx.textAlign = 'center';
   moveCtx.textBaseline = 'middle';
@@ -121,6 +126,9 @@ export async function showWinScreen(scene, winText, moveCount = 0) {
   }
 
   const moveTex = new THREE.CanvasTexture(moveCanvas);
+  moveTex.minFilter = THREE.LinearFilter;
+  moveTex.magFilter = THREE.LinearFilter;
+  moveTex.anisotropy = 16;
   moveTex.needsUpdate = true;
 
   const moveSpriteMat = new THREE.SpriteMaterial({ map: moveTex, transparent: true });

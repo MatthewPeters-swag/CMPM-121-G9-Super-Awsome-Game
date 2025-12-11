@@ -26,12 +26,12 @@ const themeConfig = {
     messageBg: 'rgba(240, 240, 240, 0.95)',
     messageBorder: 'rgba(0, 0, 0, 0.2)',
     // Canvas text colors
-    winTextColor: '#00aa00',
-    winTextStroke: '#003300',
-    loseTextColor: '#ff3333',
-    loseTextStroke: '#330000',
-    moveCountTextColor: '#333333',
-    moveCountTextStroke: '#cccccc',
+    winTextColor: '#006600',
+    winTextStroke: '#00ff00',
+    loseTextColor: '#cc0000',
+    loseTextStroke: '#ff6666',
+    moveCountTextColor: '#000000',
+    moveCountTextStroke: '#666666',
     // 3D game object colors (day/light mode)
     platformColor: 0x88ccff,
     blockColor: 0xffaa44,
